@@ -1,0 +1,233 @@
+"use client"
+
+import React from "react"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { X, Plus } from "lucide-react"
+import { fetchCategories, type BackendCategory } from "@/lib/categories"
+
+type CreateProductPayload = {
+  name: string
+  description?: string
+  price: number
+  stock: number
+  images: string[]
+  categoryId: number
+}
+
+interface AddProductModalProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onProductAdd: (product: CreateProductPayload) => void
+}
+
+export function AddProductModal({ open, onOpenChange, onProductAdd }: AddProductModalProps) {
+  const [formData, setFormData] = useState({
+    name: "",
+    price: "",
+    description: "",
+    stock: "",
+  })
+
+  const [images, setImages] = useState<string[]>([])
+  const [newImage, setNewImage] = useState("")
+  const [backendCategories, setBackendCategories] = useState<BackendCategory[]>([])
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("")
+
+  React.useEffect(() => {
+    fetchCategories()
+      .then((cats) => setBackendCategories(cats))
+      .catch(() => setBackendCategories([]))
+  }, [])
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+
+
+  const addImage = () => {
+    if (newImage.trim()) {
+      setImages((prev) => [...prev, newImage.trim()])
+      setNewImage("")
+    }
+  }
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const payload: CreateProductPayload = {
+      name: formData.name,
+      description: formData.description || undefined,
+      price: Number.parseFloat(formData.price),
+      stock: Number.parseInt(formData.stock || "0"),
+      images,
+      categoryId: Number.parseInt(selectedCategoryId || "0"),
+    }
+
+    onProductAdd(payload)
+    resetForm()
+    onOpenChange(false)
+  }
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      price: "",
+      description: "",
+      stock: "",
+    })
+    setImages([])
+    setNewImage("")
+    setSelectedCategoryId("")
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-orange-500 rounded-lg flex items-center justify-center">
+              <Plus className="w-4 h-4 text-white" />
+            </div>
+            Add New Product
+          </DialogTitle>
+          <DialogDescription>Fill in the details below to add a new product to your inventory.</DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-primary">Basic Information</h3>
+
+              <div className="space-y-2">
+                <Label htmlFor="name">Product Name *</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  placeholder="Enter product name"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="price">Price *</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    value={formData.price}
+                    onChange={(e) => handleInputChange("price", e.target.value)}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="stock">Stock *</Label>
+                  <Input
+                    id="stock"
+                    type="number"
+                    value={formData.stock}
+                    onChange={(e) => handleInputChange("stock", e.target.value)}
+                    placeholder="0"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="backendCategory">Backend Category *</Label>
+                <Select value={selectedCategoryId} onValueChange={(value) => setSelectedCategoryId(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select backend category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {backendCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={String(cat.id)}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-primary">Images (URLs) & Description</h3>
+
+              <div className="space-y-2">
+                <Label>Add image URLs</Label>
+                <div className="flex gap-2">
+                  <Input value={newImage} onChange={(e) => setNewImage(e.target.value)} placeholder="Image URL" />
+                  <Button type="button" onClick={addImage} size="icon" variant="outline">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {images.map((image, index) => (
+                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                      {image}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                        onClick={() => removeImage(index)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  placeholder="Enter product description (optional)"
+                  rows={4}
+                />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-gradient-to-r from-cyan-500 to-orange-500 hover:from-cyan-600 hover:to-orange-600"
+            >
+              Add Product
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
