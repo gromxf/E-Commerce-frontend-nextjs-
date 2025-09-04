@@ -1,15 +1,22 @@
 "use client"
 
+import React from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { AddToCartButton } from "@/components/add-to-cart-button"
 import { Star, Heart } from "lucide-react"
-import { products } from "@/lib/products"
+import { fetchAllProducts, type Product } from "@/lib/products"
 
 export function FeaturedProducts() {
-  const featuredProducts = products.slice(0, 6)
+  const [featuredProducts, setFeaturedProducts] = React.useState<Product[]>([])
+
+  React.useEffect(() => {
+    fetchAllProducts()
+      .then((data) => setFeaturedProducts(data.slice(0, 6)))
+      .catch(() => setFeaturedProducts([]))
+  }, [])
 
   return (
     <section className="py-16 bg-muted/30">

@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useCart } from "@/lib/cart-context"
+import { createOrder, type CreateOrderInput } from "@/lib/orders"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -30,12 +31,33 @@ export default function CheckoutPage() {
     e.preventDefault()
     setIsProcessing(true)
 
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    try {
+      // Create order items from cart
+      const orderItems = state.items.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }))
 
-    // Clear cart and redirect to success page
-    dispatch({ type: "CLEAR_CART" })
-    router.push("/checkout/success")
+      // Create order payload matching DTO structure
+      const orderPayload: CreateOrderInput = {
+        userId: 1, // TODO: Get from auth context
+        total: finalTotal,
+        items: orderItems,
+      }
+
+      // Create order in backend
+      await createOrder(orderPayload)
+
+      // Clear cart and redirect to success page
+      dispatch({ type: "CLEAR_CART" })
+      router.push("/checkout/success")
+    } catch (error) {
+      console.error("Failed to create order:", error)
+      alert("Failed to process order. Please try again.")
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   if (state.items.length === 0) {
