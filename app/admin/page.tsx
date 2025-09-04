@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { AddProductModal } from "@/components/add-product-modal"
+import { fetchAllOrders } from "@/lib/orders"
 import {
   LayoutDashboard,
   Package,
@@ -31,16 +32,10 @@ import {
 } from "lucide-react"
 import type { Product } from "@/lib/products"
 import { fetchAllProducts, createProduct, deleteProduct, type CreateProductInput } from "@/lib/products"
+import { BackendOrder } from "@/lib/orders"
 
 // Using Product type from lib/products
 
-const mockOrders = [
-  { id: "ORD-001", customer: "John Doe", total: 129.99, status: "Processing", date: "2024-01-15", items: 2 },
-  { id: "ORD-002", customer: "Jane Smith", total: 249.99, status: "Shipped", date: "2024-01-14", items: 1 },
-  { id: "ORD-003", customer: "Bob Johnson", total: 79.99, status: "Delivered", date: "2024-01-13", items: 3 },
-  { id: "ORD-004", customer: "Alice Brown", total: 159.98, status: "Processing", date: "2024-01-12", items: 2 },
-  { id: "ORD-005", customer: "Charlie Wilson", total: 89.99, status: "Cancelled", date: "2024-01-11", items: 1 },
-]
 
 const mockCustomers = [
   { id: 1, name: "John Doe", email: "john@example.com", orders: 3, totalSpent: 389.97, lastOrder: "2024-01-15" },
@@ -67,6 +62,7 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("")
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [productList, setProductList] = useState<Product[]>([])
+  const [orderList, setOrderList] = useState<BackendOrder[]>([])
   const [loading, setLoading] = useState(false)
 
   const handleLogin = (e: React.FormEvent) => {
@@ -87,7 +83,9 @@ export default function AdminDashboard() {
     setLoading(true)
     try {
       const productsData = await fetchAllProducts()
+      const ordersData = await fetchAllOrders()
       setProductList(productsData)
+      setOrderList(ordersData)
     } finally {
       setLoading(false)
     }
@@ -396,14 +394,13 @@ export default function AdminDashboard() {
                     </CardHeader>
                     <CardContent className="p-4">
                       <div className="space-y-3">
-                        {mockOrders.slice(0, 4).map((order) => (
+                        {orderList.slice(0, 4).map((order) => (
                           <div
                             key={order.id}
                             className="flex items-center justify-between p-3 rounded-lg hover:bg-gradient-to-r hover:from-cyan-50 hover:to-orange-50 dark:hover:from-cyan-950/20 dark:hover:to-orange-950/20 transition-all duration-200 cursor-pointer"
                           >
                             <div>
                               <p className="font-medium text-sm">{order.id}</p>
-                              <p className="text-xs text-muted-foreground">{order.customer}</p>
                             </div>
                             <div className="text-right">
                               <p className="font-semibold text-sm">${order.total}</p>
@@ -517,7 +514,6 @@ export default function AdminDashboard() {
                                 />
                                 <div>
                                   <p className="font-medium">{product.name}</p>
-                                  <p className="text-sm text-muted-foreground">{product.brand}</p>
                                 </div>
                               </div>
                             </td>
@@ -583,24 +579,18 @@ export default function AdminDashboard() {
                       <thead className="border-b bg-muted/30">
                         <tr>
                           <th className="text-left p-4 font-medium">Order ID</th>
-                          <th className="text-left p-4 font-medium">Customer</th>
-                          <th className="text-left p-4 font-medium">Date</th>
-                          <th className="text-left p-4 font-medium">Items</th>
                           <th className="text-left p-4 font-medium">Total</th>
                           <th className="text-left p-4 font-medium">Status</th>
                           <th className="text-left p-4 font-medium">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {mockOrders.map((order, index) => (
+                        {orderList.map((order, index) => (
                           <tr
                             key={order.id}
                             className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? "bg-muted/5" : ""}`}
                           >
                             <td className="p-4 font-medium">{order.id}</td>
-                            <td className="p-4">{order.customer}</td>
-                            <td className="p-4 text-muted-foreground">{order.date}</td>
-                            <td className="p-4">{order.items}</td>
                             <td className="p-4 font-medium">${order.total}</td>
                             <td className="p-4">
                               <Badge

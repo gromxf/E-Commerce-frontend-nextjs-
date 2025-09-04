@@ -49,3 +49,4 @@ export async function fetchAllOrders(): Promise<BackendOrder[]> {
     const data: BackendOrder[] = await res.json()
     return data
 }
+
