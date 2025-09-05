@@ -27,7 +27,6 @@ import {
   Menu,
   X,
   TrendingUp,
-  TrendingDown,
   DollarSign,
   Eye,
   Edit,
@@ -369,10 +368,6 @@ export default function AdminDashboard() {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="icon" className="relative hover:bg-cyan-50 dark:hover:bg-cyan-950/20">
-                <Bell className="w-5 h-5" />
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-cyan-500 to-orange-500 rounded-full"></div>
-              </Button>
               <Button
                 variant="ghost"
                 size="icon"
@@ -580,9 +575,6 @@ export default function AdminDashboard() {
                       className="pl-10 w-64"
                     />
                   </div>
-                  <Button variant="outline" size="icon">
-                    <Filter className="w-4 h-4" />
-                  </Button>
                 </div>
                 <Button
                   className="bg-gradient-to-r from-cyan-500 to-orange-500 hover:from-cyan-600 hover:to-orange-600"
@@ -649,9 +641,6 @@ export default function AdminDashboard() {
                             </td>
                             <td className="p-4">
                               <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="icon"

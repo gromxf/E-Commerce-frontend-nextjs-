@@ -1,14 +1,32 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Search, User, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CartDrawer } from "@/components/cart-drawer"
+import { fetchCategories, type BackendCategory } from "@/lib/categories"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [categories, setCategories] = useState<BackendCategory[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories()
+        setCategories(data)
+      } catch (error) {
+        console.error('Failed to fetch categories:', error)
+        setCategories([])
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadCategories()
+  }, [])
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,20 +41,30 @@ export function Header() {
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          <nav className="hidden lg:flex items-center space-x-6">
             <Link href="/products" className="text-foreground hover:text-primary transition-colors">
               Products
             </Link>
-            <Link href="/categories" className="text-foreground hover:text-primary transition-colors">
-              Categories
-            </Link>
+            {loading ? (
+              <span className="text-muted-foreground text-sm">Loading categories...</span>
+            ) : (
+              categories.map((category) => (
+                <Link
+                  key={category.id}
+                  href={`/products?category=${category.id}`}
+                  className="text-foreground hover:text-primary transition-colors text-sm whitespace-nowrap"
+                >
+                  {category.name}
+                </Link>
+              ))
+            )}
           </nav>
           {/* Actions */}
           <div className="flex items-center space-x-2">
             <CartDrawer />
 
             {/* Mobile Menu Button */}
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
@@ -44,7 +72,7 @@ export function Header() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden border-t py-4">
+          <div className="lg:hidden border-t py-4">
             <div className="flex flex-col space-y-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -54,9 +82,27 @@ export function Header() {
                 <Link href="/products" className="text-foreground hover:text-primary transition-colors py-2">
                   Products
                 </Link>
-                <Link href="/categories" className="text-foreground hover:text-primary transition-colors py-2">
-                  Categories
-                </Link>
+                <div className="space-y-1">
+                  <div className="text-sm font-medium text-muted-foreground px-2 py-1">
+                    Categories
+                  </div>
+                  {loading ? (
+                    <div className="text-sm text-muted-foreground px-2 py-1">
+                      Loading categories...
+                    </div>
+                  ) : (
+                    categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        href={`/products?category=${category.id}`}
+                        className="text-foreground hover:text-primary transition-colors py-1 px-2 block text-sm"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {category.name}
+                      </Link>
+                    ))
+                  )}
+                </div>
                 <Link href="/account" className="text-foreground hover:text-primary transition-colors py-2">
                   My Account
                 </Link>
