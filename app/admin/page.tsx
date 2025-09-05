@@ -7,6 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { AddProductModal } from "@/components/add-product-modal"
+import { AddCategoryModal } from "@/components/add-category-modal"
+import { Toaster } from "@/components/ui/toaster"
+import { useToast } from "@/hooks/use-toast"
 import { fetchAllOrders } from "@/lib/orders"
 import {
   LayoutDashboard,
@@ -29,10 +32,19 @@ import {
   Trash2,
   Plus,
   Filter,
+  Tag,
 } from "lucide-react"
 import type { Product } from "@/lib/products"
 import { fetchAllProducts, createProduct, deleteProduct, type CreateProductInput } from "@/lib/products"
 import { BackendOrder } from "@/lib/orders"
+import {
+  fetchAllCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  type BackendCategory,
+  type CreateCategoryInput
+} from "@/lib/api/category"
 
 // Using Product type from lib/products
 
@@ -54,6 +66,7 @@ const salesData = [
 ]
 
 export default function AdminDashboard() {
+  const { toast } = useToast()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [credentials, setCredentials] = useState({ username: "", password: "" })
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -63,7 +76,11 @@ export default function AdminDashboard() {
   const [showAddProduct, setShowAddProduct] = useState(false)
   const [productList, setProductList] = useState<Product[]>([])
   const [orderList, setOrderList] = useState<BackendOrder[]>([])
+  const [categoryList, setCategoryList] = useState<BackendCategory[]>([])
   const [loading, setLoading] = useState(false)
+  const [showAddCategory, setShowAddCategory] = useState(false)
+  const [editingCategory, setEditingCategory] = useState<BackendCategory | null>(null)
+  const [categorySearchTerm, setCategorySearchTerm] = useState("")
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,8 +101,10 @@ export default function AdminDashboard() {
     try {
       const productsData = await fetchAllProducts()
       const ordersData = await fetchAllOrders()
+      const categoriesData = await fetchAllCategories()
       setProductList(productsData)
       setOrderList(ordersData)
+      setCategoryList(categoriesData)
     } finally {
       setLoading(false)
     }
@@ -98,13 +117,92 @@ export default function AdminDashboard() {
   }, [isAuthenticated])
 
   const handleAddProduct = async (newProduct: CreateProductInput) => {
-    await createProduct(newProduct)
-    await loadData()
+    try {
+      await createProduct(newProduct)
+      await loadData()
+      toast({
+        title: "Success",
+        description: "Product created successfully!",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create product",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleDeleteProduct = async (id: number) => {
-    await deleteProduct(id)
-    await loadData()
+    try {
+      await deleteProduct(id)
+      await loadData()
+      toast({
+        title: "Success",
+        description: "Product deleted successfully!",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to delete product",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleAddCategory = async (newCategory: CreateCategoryInput) => {
+    try {
+      await createCategory(newCategory)
+      await loadData()
+      setShowAddCategory(false)
+      toast({
+        title: "Success",
+        description: "Category created successfully!",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create category",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleUpdateCategory = async (id: number, updatedCategory: CreateCategoryInput) => {
+    try {
+      await updateCategory(id, updatedCategory)
+      await loadData()
+      setEditingCategory(null)
+      toast({
+        title: "Success",
+        description: "Category updated successfully!",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update category",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteCategory = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this category?")) {
+      try {
+        await deleteCategory(id)
+        await loadData()
+        toast({
+          title: "Success",
+          description: "Category deleted successfully!",
+        })
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: error instanceof Error ? error.message : "Failed to delete category",
+          variant: "destructive",
+        })
+      }
+    }
   }
 
   const filteredProducts = productList.filter(
@@ -113,9 +211,16 @@ export default function AdminDashboard() {
       product.category.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
+  const filteredCategories = categoryList.filter(
+    (category) =>
+      category.name.toLowerCase().includes(categorySearchTerm.toLowerCase()) ||
+      category.slug.toLowerCase().includes(categorySearchTerm.toLowerCase()),
+  )
+
   const sidebarItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "products", label: "Products", icon: Package },
+    { id: "categories", label: "Categories", icon: Tag },
     { id: "orders", label: "Orders", icon: ShoppingCart },
     { id: "customers", label: "Customers", icon: Users },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
@@ -567,6 +672,100 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {activeTab === "categories" && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                    <Input
+                      placeholder="Search categories..."
+                      value={categorySearchTerm}
+                      onChange={(e) => setCategorySearchTerm(e.target.value)}
+                      className="pl-10 w-64"
+                    />
+                  </div>
+                  <Button variant="outline" size="icon">
+                    <Filter className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Button
+                  className="bg-gradient-to-r from-cyan-500 to-orange-500 hover:from-cyan-600 hover:to-orange-600"
+                  onClick={() => setShowAddCategory(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Category
+                </Button>
+              </div>
+
+              <Card className="border-0 shadow-sm">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="border-b bg-muted/30">
+                        <tr>
+                          <th className="text-left p-4 font-medium">ID</th>
+                          <th className="text-left p-4 font-medium">Name</th>
+                          <th className="text-left p-4 font-medium">Slug</th>
+                          <th className="text-left p-4 font-medium">Products</th>
+                          <th className="text-left p-4 font-medium">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredCategories.map((category, index) => (
+                          <tr
+                            key={category.id}
+                            className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? "bg-muted/5" : ""}`}
+                          >
+                            <td className="p-4 font-medium">{category.id}</td>
+                            <td className="p-4">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-orange-500 rounded-lg flex items-center justify-center">
+                                  <Tag className="w-4 h-4 text-white" />
+                                </div>
+                                <div>
+                                  <p className="font-medium">{category.name}</p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <Badge variant="outline">{category.slug}</Badge>
+                            </td>
+                            <td className="p-4">
+                              <Badge variant="secondary">
+                                {category.products?.length || 0} products
+                              </Badge>
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => setEditingCategory(category)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive hover:text-destructive"
+                                  onClick={() => handleDeleteCategory(category.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
           {activeTab === "orders" && (
             <div className="space-y-6">
               <Card className="border-0 shadow-sm">
@@ -781,6 +980,14 @@ export default function AdminDashboard() {
       )}
 
       <AddProductModal open={showAddProduct} onOpenChange={setShowAddProduct} onProductAdd={handleAddProduct} />
+      <AddCategoryModal
+        open={showAddCategory}
+        onOpenChange={setShowAddCategory}
+        onCategoryAdd={handleAddCategory}
+        onCategoryUpdate={handleUpdateCategory}
+        editingCategory={editingCategory}
+      />
+      <Toaster />
     </div>
   )
 }
