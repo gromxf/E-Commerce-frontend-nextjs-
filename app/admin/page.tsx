@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { AddProductModal } from "@/components/add-product-modal"
 import { AddCategoryModal } from "@/components/add-category-modal"
+import { EditProductModal } from "@/components/edit-product-modal"
+import { EditCategoryModal } from "@/components/edit-category-modal"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
 import { fetchAllOrders } from "@/lib/orders"
@@ -35,7 +37,7 @@ import {
   Tag,
 } from "lucide-react"
 import type { Product } from "@/lib/products"
-import { fetchAllProducts, createProduct, deleteProduct, type CreateProductInput } from "@/lib/products"
+import { fetchAllProducts, createProduct, updateProduct, deleteProduct, type CreateProductInput } from "@/lib/products"
 import { BackendOrder } from "@/lib/orders"
 import {
   fetchAllCategories,
@@ -81,6 +83,9 @@ export default function AdminDashboard() {
   const [showAddCategory, setShowAddCategory] = useState(false)
   const [editingCategory, setEditingCategory] = useState<BackendCategory | null>(null)
   const [categorySearchTerm, setCategorySearchTerm] = useState("")
+  const [showEditProduct, setShowEditProduct] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [showEditCategory, setShowEditCategory] = useState(false)
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -133,6 +138,23 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleUpdateProduct = async (id: number, updatedProduct: CreateProductInput) => {
+    try {
+      await updateProduct(id, updatedProduct)
+      await loadData()
+      toast({
+        title: "Success",
+        description: "Product updated successfully!",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update product",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleDeleteProduct = async (id: number) => {
     try {
       await deleteProduct(id)
@@ -173,6 +195,7 @@ export default function AdminDashboard() {
       await updateCategory(id, updatedCategory)
       await loadData()
       setEditingCategory(null)
+      setShowEditCategory(false)
       toast({
         title: "Success",
         description: "Category updated successfully!",
@@ -381,11 +404,6 @@ export default function AdminDashboard() {
                       <div>
                         <p className="text-sm font-medium text-cyan-100">Total Revenue</p>
                         <p className="text-3xl font-bold text-white">$45,231</p>
-                        <div className="flex items-center mt-2 text-sm">
-                          <TrendingUp className="w-4 h-4 text-green-300 mr-1" />
-                          <span className="text-green-300 font-medium">+20.1%</span>
-                          <span className="text-cyan-100 ml-1">from last month</span>
-                        </div>
                       </div>
                       <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                         <DollarSign className="w-6 h-6 text-white" />
@@ -400,12 +418,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-orange-100">Orders</p>
-                        <p className="text-3xl font-bold text-white">1,234</p>
-                        <div className="flex items-center mt-2 text-sm">
-                          <TrendingUp className="w-4 h-4 text-green-300 mr-1" />
-                          <span className="text-green-300 font-medium">+15.3%</span>
-                          <span className="text-orange-100 ml-1">from last month</span>
-                        </div>
+                        <p className="text-3xl font-bold text-white">{orderList.length}</p>
                       </div>
                       <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                         <ShoppingCart className="w-6 h-6 text-white" />
@@ -421,11 +434,6 @@ export default function AdminDashboard() {
                       <div>
                         <p className="text-sm font-medium text-purple-100">Products</p>
                         <p className="text-3xl font-bold text-white">{productList.length}</p>
-                        <div className="flex items-center mt-2 text-sm">
-                          <TrendingDown className="w-4 h-4 text-red-300 mr-1" />
-                          <span className="text-red-300 font-medium">-2.4%</span>
-                          <span className="text-purple-100 ml-1">from last month</span>
-                        </div>
                       </div>
                       <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                         <Package className="w-6 h-6 text-white" />
@@ -440,12 +448,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-emerald-100">Customers</p>
-                        <p className="text-3xl font-bold text-white">2,847</p>
-                        <div className="flex items-center mt-2 text-sm">
-                          <TrendingUp className="w-4 h-4 text-green-300 mr-1" />
-                          <span className="text-green-300 font-medium">+8.2%</span>
-                          <span className="text-emerald-100 ml-1">from last month</span>
-                        </div>
+                        <p className="text-3xl font-bold text-white">0</p>
                       </div>
                       <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                         <Users className="w-6 h-6 text-white" />
@@ -649,7 +652,15 @@ export default function AdminDashboard() {
                                 <Button variant="ghost" size="icon" className="h-8 w-8">
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => {
+                                    setEditingProduct(product)
+                                    setShowEditProduct(true)
+                                  }}
+                                >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                                 <Button
@@ -742,7 +753,10 @@ export default function AdminDashboard() {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  onClick={() => setEditingCategory(category)}
+                                  onClick={() => {
+                                    setEditingCategory(category)
+                                    setShowEditCategory(true)
+                                  }}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -984,8 +998,18 @@ export default function AdminDashboard() {
         open={showAddCategory}
         onOpenChange={setShowAddCategory}
         onCategoryAdd={handleAddCategory}
+      />
+      <EditProductModal
+        open={showEditProduct}
+        onOpenChange={setShowEditProduct}
+        onProductUpdate={handleUpdateProduct}
+        product={editingProduct}
+      />
+      <EditCategoryModal
+        open={showEditCategory}
+        onOpenChange={setShowEditCategory}
         onCategoryUpdate={handleUpdateCategory}
-        editingCategory={editingCategory}
+        category={editingCategory}
       />
       <Toaster />
     </div>

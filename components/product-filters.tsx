@@ -1,44 +1,54 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { fetchCategories } from "@/lib/categories"
+import type { BackendCategory } from "@/lib/categories"
 
-const categories = ["Electronics", "Fashion", "Home & Garden", "Sports & Fitness", "Books & Media", "Beauty & Health"]
 const brands = ["Apple", "Samsung", "Nike", "Adidas", "Sony", "Canon"]
 
 interface ProductFiltersProps {
   currentCategory?: string
+  selectedCategories: number[]
+  onCategoryChange: (categoryIds: number[]) => void
 }
 
-export function ProductFilters({ currentCategory }: ProductFiltersProps) {
+export function ProductFilters({ currentCategory, selectedCategories, onCategoryChange }: ProductFiltersProps) {
   const [priceRange, setPriceRange] = useState([0, 1000])
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(currentCategory ? [currentCategory] : [])
   const [selectedBrands, setSelectedBrands] = useState<string[]>([])
+  const [categories, setCategories] = useState<BackendCategory[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const handleCategoryChange = (category: string, checked: boolean) => {
-    if (checked) {
-      setSelectedCategories([...selectedCategories, category])
-    } else {
-      setSelectedCategories(selectedCategories.filter((c) => c !== category))
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories()
+        setCategories(data)
+      } catch (error) {
+        console.error('Failed to fetch categories:', error)
+        setCategories([]) // Set empty array on error
+      } finally {
+        setLoading(false)
+      }
     }
-  }
+    loadCategories()
+  }, [])
 
-  const handleBrandChange = (brand: string, checked: boolean) => {
+  const handleCategoryChange = (categoryId: number, checked: boolean) => {
     if (checked) {
-      setSelectedBrands([...selectedBrands, brand])
+      onCategoryChange([...selectedCategories, categoryId])
     } else {
-      setSelectedBrands(selectedBrands.filter((b) => b !== brand))
+      onCategoryChange(selectedCategories.filter((id) => id !== categoryId))
     }
   }
 
   const clearFilters = () => {
     setPriceRange([0, 10000])
-    setSelectedCategories(currentCategory ? [currentCategory] : [])
-    setSelectedBrands([])
+    onCategoryChange([])
   }
 
   return (
@@ -58,16 +68,14 @@ export function ProductFilters({ currentCategory }: ProductFiltersProps) {
           </CardHeader>
           <CardContent className="space-y-2">
             <div className="flex flex-wrap gap-2">
-              {selectedCategories.map((category) => (
-                <Badge key={category} variant="secondary" className="cursor-pointer">
-                  {category}
-                </Badge>
-              ))}
-              {selectedBrands.map((brand) => (
-                <Badge key={brand} variant="secondary" className="cursor-pointer">
-                  {brand}
-                </Badge>
-              ))}
+              {selectedCategories.map((categoryId) => {
+                const category = categories.find(c => c.id === categoryId)
+                return (
+                  <Badge key={categoryId} variant="secondary" className="cursor-pointer">
+                    {category?.name || `Category ${categoryId}`}
+                  </Badge>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
@@ -94,42 +102,25 @@ export function ProductFilters({ currentCategory }: ProductFiltersProps) {
             <CardTitle className="text-sm">Categories</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {categories.map((category) => (
-              <div key={category} className="flex items-center space-x-2">
-                <Checkbox
-                  id={category}
-                  checked={selectedCategories.includes(category)}
-                  onCheckedChange={(checked) => handleCategoryChange(category, checked as boolean)}
-                />
-                <label htmlFor={category} className="text-sm cursor-pointer">
-                  {category}
-                </label>
-              </div>
-            ))}
+            {loading ? (
+              <div className="text-sm text-muted-foreground">Loading categories...</div>
+            ) : (
+              categories.map((category) => (
+                <div key={category.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`category-${category.id}`}
+                    checked={selectedCategories.includes(category.id)}
+                    onCheckedChange={(checked) => handleCategoryChange(category.id, checked as boolean)}
+                  />
+                  <label htmlFor={`category-${category.id}`} className="text-sm cursor-pointer">
+                    {category.name}
+                  </label>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       )}
-
-      {/* Brands */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm">Brands</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {brands.map((brand) => (
-            <div key={brand} className="flex items-center space-x-2">
-              <Checkbox
-                id={brand}
-                checked={selectedBrands.includes(brand)}
-                onCheckedChange={(checked) => handleBrandChange(brand, checked as boolean)}
-              />
-              <label htmlFor={brand} className="text-sm cursor-pointer">
-                {brand}
-              </label>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
     </div>
   )
 }

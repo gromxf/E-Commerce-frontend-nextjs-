@@ -77,7 +77,9 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000";
 
 export async function fetchCategories(): Promise<BackendCategory[]> {
   const res = await fetch(`${API_BASE_URL}/categories`, { next: { revalidate: 300 } })
+
   if (!res.ok) throw new Error("Failed to fetch categories")
+
   const data: BackendCategory[] = await res.json()
   return data
 }

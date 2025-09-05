@@ -97,15 +97,7 @@ export function CartDrawer() {
                         </Button>
                       </div>
                       <div className="flex items-center space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-primary"
-                          onClick={() => saveForLater(item.id)}
-                          title="Save for later"
-                        >
-                          <Heart className="h-3 w-3" />
-                        </Button>
+
                         <Button
                           variant="ghost"
                           size="icon"

@@ -1,25 +1,104 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { ProductGrid } from "@/components/product-grid"
 import { ProductFilters } from "@/components/product-filters"
+import { Badge } from "@/components/ui/badge"
 import { fetchAllProducts } from "@/lib/products"
+import { fetchCategories } from "@/lib/categories"
+import type { Product } from "@/lib/products"
+import type { BackendCategory } from "@/lib/categories"
 
-export default async function ProductsPage() {
-  const products = await fetchAllProducts()
+export default function ProductsPage() {
+  const searchParams = useSearchParams()
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedCategories, setSelectedCategories] = useState<number[]>([])
+  const [categories, setCategories] = useState<BackendCategory[]>([])
+
+  const loadProducts = async (categoryIds?: number[]) => {
+    try {
+      setLoading(true)
+      const data = await fetchAllProducts(categoryIds)
+      setProducts(data)
+    } catch (error) {
+      console.error('Failed to fetch products:', error)
+      setProducts([]) // Set empty array on error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    // Load categories first
+    const loadCategories = async () => {
+      try {
+        const data = await fetchCategories()
+        setCategories(data)
+      } catch (error) {
+        console.error('Failed to fetch categories:', error)
+        setCategories([])
+      }
+    }
+    loadCategories()
+
+    // Check for category parameter in URL
+    const categoryParam = searchParams.get('category')
+    if (categoryParam) {
+      const categoryId = parseInt(categoryParam, 10)
+      if (!isNaN(categoryId)) {
+        setSelectedCategories([categoryId])
+        loadProducts([categoryId])
+        return
+      }
+    }
+
+    // Load all products if no category filter
+    loadProducts()
+  }, [searchParams])
+
+  const handleCategoryChange = (categoryIds: number[]) => {
+    setSelectedCategories(categoryIds)
+    loadProducts(categoryIds.length > 0 ? categoryIds : undefined)
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-balance">All Products</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 text-balance">
+            {selectedCategories.length > 0 ? 'Filtered Products' : 'All Products'}
+          </h1>
           <p className="text-muted-foreground text-lg text-pretty">
-            Discover our complete collection of quality products
+            {selectedCategories.length > 0
+              ? `Showing products in selected categories`
+              : 'Discover our complete collection of quality products'
+            }
           </p>
+          {selectedCategories.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-4">
+              {selectedCategories.map((categoryId) => {
+                const category = categories.find(c => c.id === categoryId)
+                return (
+                  <Badge key={categoryId} variant="secondary" className="text-sm">
+                    {category?.name || `Category ${categoryId}`}
+                  </Badge>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-4 gap-8">
           <aside className="lg:col-span-1">
-            <ProductFilters />
+            <ProductFilters
+              selectedCategories={selectedCategories}
+              onCategoryChange={handleCategoryChange}
+            />
           </aside>
           <div className="lg:col-span-3">
-            <ProductGrid products={products} />
+            <ProductGrid products={products} loading={loading} />
           </div>
         </div>
       </div>

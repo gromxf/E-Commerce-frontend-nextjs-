@@ -31,20 +31,8 @@ export function Header() {
               Categories
             </Link>
           </nav>
-
-          {/* Search Bar */}
-          <div className="hidden md:flex flex-1 max-w-md mx-6">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input placeholder="Search products..." className="pl-10 bg-muted/50 border-border" />
-            </div>
-          </div>
-
           {/* Actions */}
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" className="hidden md:flex">
-              <User className="h-5 w-5" />
-            </Button>
             <CartDrawer />
 
             {/* Mobile Menu Button */}

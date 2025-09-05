@@ -12,22 +12,18 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-import { BackendCategory, CreateCategoryInput } from "@/lib/api/category"
+import { CreateCategoryInput } from "@/lib/api/category"
 
 interface AddCategoryModalProps {
     open: boolean
     onOpenChange: (open: boolean) => void
     onCategoryAdd: (category: CreateCategoryInput) => void
-    onCategoryUpdate?: (id: number, category: CreateCategoryInput) => void
-    editingCategory?: BackendCategory | null
 }
 
 export function AddCategoryModal({
     open,
     onOpenChange,
     onCategoryAdd,
-    onCategoryUpdate,
-    editingCategory,
 }: AddCategoryModalProps) {
     const [formData, setFormData] = useState<CreateCategoryInput>({
         name: "",
@@ -36,19 +32,12 @@ export function AddCategoryModal({
     const [errors, setErrors] = useState<Partial<CreateCategoryInput>>({})
 
     useEffect(() => {
-        if (editingCategory) {
-            setFormData({
-                name: editingCategory.name,
-                slug: editingCategory.slug,
-            })
-        } else {
-            setFormData({
-                name: "",
-                slug: "",
-            })
-        }
+        setFormData({
+            name: "",
+            slug: "",
+        })
         setErrors({})
-    }, [editingCategory, open])
+    }, [open])
 
     const validateForm = (): boolean => {
         const newErrors: Partial<CreateCategoryInput> = {}
@@ -74,11 +63,7 @@ export function AddCategoryModal({
             return
         }
 
-        if (editingCategory && onCategoryUpdate) {
-            onCategoryUpdate(editingCategory.id, formData)
-        } else {
-            onCategoryAdd(formData)
-        }
+        onCategoryAdd(formData)
     }
 
     const handleClose = () => {
@@ -101,7 +86,7 @@ export function AddCategoryModal({
         setFormData(prev => ({
             ...prev,
             name,
-            slug: editingCategory ? prev.slug : generateSlug(name)
+            slug: generateSlug(name)
         }))
     }
 
@@ -109,14 +94,9 @@ export function AddCategoryModal({
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>
-                        {editingCategory ? "Edit Category" : "Add New Category"}
-                    </DialogTitle>
+                    <DialogTitle>Add New Category</DialogTitle>
                     <DialogDescription>
-                        {editingCategory
-                            ? "Update the category information below."
-                            : "Create a new category for your products. Fill in the details below."
-                        }
+                        Create a new category for your products. Fill in the details below.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -160,7 +140,7 @@ export function AddCategoryModal({
                             Cancel
                         </Button>
                         <Button type="submit" className="bg-gradient-to-r from-cyan-500 to-orange-500 hover:from-cyan-600 hover:to-orange-600">
-                            {editingCategory ? "Update Category" : "Create Category"}
+                            Create Category
                         </Button>
                     </DialogFooter>
                 </form>

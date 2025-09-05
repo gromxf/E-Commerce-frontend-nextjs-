@@ -9,11 +9,8 @@ import { Header } from "@/components/header"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "EcoStore - Your Trusted Online Marketplace",
-  description: "Quality products at competitive prices with exceptional service",
-  generator: "v0.app",
+  title: "EcoStore",
 }
-
 export default function RootLayout({
   children,
 }: Readonly<{

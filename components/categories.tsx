@@ -7,6 +7,7 @@ import { fetchCategories, type BackendCategory } from "@/lib/categories"
 
 const defaultImages = [
   "/modern-electronics.png",
+  "/descarcare.jpg",
   "/fashion-clothing-accessories.png",
   "/home-garden-furniture-decor.jpg",
   "/sports-outdoor-equipment.jpg",
@@ -57,16 +58,9 @@ export function Categories() {
               const image = defaultImages[index % defaultImages.length]
 
               return (
-                <Link key={category.id} href={`/category/${category.slug}`}>
+                <Link key={category.id} href={`/products?category=${category.id}`}>
                   <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 bg-card border-border">
                     <CardContent className="p-0">
-                      <div className="aspect-video relative overflow-hidden rounded-t-lg">
-                        <img
-                          src={image}
-                          alt={category.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
                       <div className="p-6">
                         <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
                           {category.name}

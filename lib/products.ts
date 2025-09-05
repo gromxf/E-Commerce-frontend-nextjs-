@@ -52,8 +52,16 @@ function mapBackendToFrontendProduct(p: BackendProduct): Product {
 }
 
 // API calls
-export async function fetchAllProducts(): Promise<Product[]> {
-  const res = await fetch(`${API_BASE_URL}/products`)
+export async function fetchAllProducts(categoryIds?: number[]): Promise<Product[]> {
+  let url = `${API_BASE_URL}/products`
+
+  // Add category filter if provided
+  if (categoryIds && categoryIds.length > 0) {
+    const categoryParams = categoryIds.map(id => `categoryId=${id}`).join('&')
+    url += `?${categoryParams}`
+  }
+
+  const res = await fetch(url)
 
   if (!res.ok) throw new Error("Failed to fetch products")
 
@@ -62,7 +70,7 @@ export async function fetchAllProducts(): Promise<Product[]> {
 }
 
 export async function fetchProductById(id: number): Promise<Product | null> {
-  const res = await fetch(`${API_BASE_URL}/products/${id}`)
+  const res = await fetch(`${API_BASE_URL}/products/${id}`, { cache: "no-store" })
   //guard
   if (res.status === 404) return null
   if (!res.ok) throw new Error("Failed to fetch product")
@@ -104,4 +112,18 @@ export async function deleteProduct(id: number): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" })
 
   if (!res.ok) throw new Error("Failed to delete product")
+}
+
+export async function fetchSimilarProducts(categoryId: number, excludeProductId: number, limit: number = 6): Promise<Product[]> {
+  const res = await fetch(`${API_BASE_URL}/products?categoryId=${categoryId}`)
+
+  if (!res.ok) throw new Error("Failed to fetch similar products")
+
+  const data: BackendProduct[] = await res.json()
+  const allProducts = data.map(mapBackendToFrontendProduct)
+
+  // Filter out the current product and limit results
+  return allProducts
+    .filter(product => product.id !== excludeProductId)
+    .slice(0, limit)
 }

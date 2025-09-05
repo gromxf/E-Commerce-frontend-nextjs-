@@ -123,7 +123,7 @@ export default function CategoriesPage() {
                         <p className="text-muted-foreground mb-4 text-sm">
                           Explore our {category.name.toLowerCase()} collection
                         </p>
-                        <Link href={`/category/${category.slug}`}>
+                        <Link href={`/products?category=${category.id}`}>
                           <Button
                             variant="ghost"
                             className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
