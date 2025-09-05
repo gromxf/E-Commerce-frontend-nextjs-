@@ -4,9 +4,8 @@ import React from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { AddToCartButton } from "@/components/add-to-cart-button"
-import { Star, Heart } from "lucide-react"
+import { Heart } from "lucide-react"
 import { fetchAllProducts, type Product } from "@/lib/products"
 
 export function FeaturedProducts() {
@@ -37,11 +36,6 @@ export function FeaturedProducts() {
               <CardContent className="p-0">
                 <Link href={`/products/${product.id}`}>
                   <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                    {product.badge && (
-                      <Badge className="absolute top-3 left-3 z-10 bg-secondary text-secondary-foreground">
-                        {product.badge}
-                      </Badge>
-                    )}
                     <Button
                       variant="ghost"
                       size="icon"
@@ -63,24 +57,6 @@ export function FeaturedProducts() {
                       {product.name}
                     </h3>
                   </Link>
-
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="text-sm font-medium ml-1">{product.rating}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
-                  </div>
-
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold text-primary">${product.price}</span>
-                      {product.originalPrice && (
-                        <span className="text-sm text-muted-foreground line-through">${product.originalPrice}</span>
-                      )}
-                    </div>
-                  </div>
-
                   <AddToCartButton product={product} className="w-full" />
                 </div>
               </CardContent>

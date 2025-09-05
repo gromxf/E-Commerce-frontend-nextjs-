@@ -17,10 +17,11 @@ interface ProductDetailsProps {
 export function ProductDetails({ product }: ProductDetailsProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-
-  const discount = product.originalPrice
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : 0
+  const galleryImages = (Array.isArray((product as any).images) && (product as any).images.length
+    ? (product as any).images
+    : [product.image]) as string[]
+  const features: string[] = ((product as any).features ?? []) as string[]
+  const specifications: Record<string, string> = ((product as any).specifications ?? {}) as Record<string, string>
 
   return (
     <div className="space-y-8">
@@ -42,24 +43,21 @@ export function ProductDetails({ product }: ProductDetailsProps) {
         <div className="space-y-4">
           <div className="aspect-square relative overflow-hidden rounded-lg bg-muted">
             <img
-              src={product.images[selectedImage] || product.image}
+              src={galleryImages[selectedImage] || "/placeholder.svg"}
               alt={product.name}
               className="w-full h-full object-cover"
             />
-            {product.badge && (
-              <Badge className="absolute top-4 left-4 bg-secondary text-secondary-foreground">{product.badge}</Badge>
-            )}
+
           </div>
 
-          {product.images.length > 1 && (
+          {galleryImages.length > 1 && (
             <div className="flex gap-2 overflow-x-auto">
-              {product.images.map((image, index) => (
+              {galleryImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors ${
-                    selectedImage === index ? "border-primary" : "border-border"
-                  }`}
+                  className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors ${selectedImage === index ? "border-primary" : "border-border"
+                    }`}
                 >
                   <img
                     src={image || "/placeholder.svg"}
@@ -84,14 +82,11 @@ export function ProductDetails({ product }: ProductDetailsProps) {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-5 w-5 ${
-                        i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
-                      }`}
+                      className={`h-5 w-5 ${i < Math.floor(5) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
+                        }`}
                     />
                   ))}
                 </div>
-                <span className="ml-2 font-medium">{product.rating}</span>
-                <span className="ml-1 text-muted-foreground">({product.reviews} reviews)</span>
               </div>
             </div>
           </div>
@@ -100,12 +95,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <span className="text-3xl font-bold text-primary">${product.price}</span>
-              {product.originalPrice && (
-                <>
-                  <span className="text-xl text-muted-foreground line-through">${product.originalPrice}</span>
-                  <Badge variant="destructive">{discount}% OFF</Badge>
-                </>
-              )}
             </div>
             <p className="text-sm text-muted-foreground">
               {product.inStock ? (
@@ -152,7 +141,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             <CardContent className="p-6">
               <h3 className="font-semibold mb-3">Key Features</h3>
               <ul className="space-y-2">
-                {product.features.map((feature, index) => (
+                {features.map((feature, index) => (
                   <li key={index} className="flex items-center gap-2 text-sm">
                     <div className="w-1.5 h-1.5 bg-primary rounded-full" />
                     {feature}
@@ -184,7 +173,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <Tabs defaultValue="specifications" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="specifications">Specifications</TabsTrigger>
-          <TabsTrigger value="reviews">Reviews ({product.reviews})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="specifications" className="mt-6">
@@ -192,7 +180,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
             <CardContent className="p-6">
               <h3 className="font-semibold mb-4">Product Specifications</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(product.specifications).map(([key, value]) => (
+                {Object.entries(specifications).map(([key, value]) => (
                   <div key={key} className="flex justify-between py-2 border-b border-border">
                     <span className="font-medium">{key}:</span>
                     <span className="text-muted-foreground">{value}</span>

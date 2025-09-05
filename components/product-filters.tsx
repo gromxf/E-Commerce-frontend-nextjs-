@@ -36,7 +36,7 @@ export function ProductFilters({ currentCategory }: ProductFiltersProps) {
   }
 
   const clearFilters = () => {
-    setPriceRange([0, 1000])
+    setPriceRange([0, 10000])
     setSelectedCategories(currentCategory ? [currentCategory] : [])
     setSelectedBrands([])
   }
@@ -79,7 +79,7 @@ export function ProductFilters({ currentCategory }: ProductFiltersProps) {
           <CardTitle className="text-sm">Price Range</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Slider value={priceRange} onValueChange={setPriceRange} max={1000} step={10} className="w-full" />
+          <Slider value={priceRange} onValueChange={setPriceRange} max={10000} step={10} className="w-full" />
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>${priceRange[0]}</span>
             <span>${priceRange[1]}</span>

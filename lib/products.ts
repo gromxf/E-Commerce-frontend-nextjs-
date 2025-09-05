@@ -12,6 +12,7 @@ export interface Product {
   inStock: boolean
   stockCount: number
 }
+
 export interface CreateProductInput {
   name: string
   description?: string
@@ -21,50 +22,7 @@ export interface CreateProductInput {
   categoryId: number
 }
 
-// Lista de produse demo
-export const products: Product[] = [
-  {
-    id: 1,
-    name: "Wireless Bluetooth Headphones",
-    price: 129.99,
-    image: "/premium-wireless-headphones.png",
-    description: "Experience premium sound quality with these headphones.",
-    category: "Electronics",
-    inStock: true,
-    stockCount: 15,
-  },
-  {
-    id: 2,
-    name: "Smart Fitness Watch",
-    price: 249.99,
-    image: "/modern-smartwatch-fitness-tracker.jpg",
-    description: "Track your fitness goals with this advanced smartwatch.",
-    category: "Wearables",
-    inStock: true,
-    stockCount: 8,
-  },
-  {
-    id: 3,
-    name: "Organic Cotton T-Shirt",
-    price: 29.99,
-    image: "/organic-cotton-t-shirt.jpg",
-    description: "Comfortable and sustainable organic cotton t-shirt.",
-    category: "Clothing",
-    inStock: true,
-    stockCount: 25,
-  },
-]
-
-// Funcții utile
-export function getProductById(id: number): Product | undefined {
-  return products.find((product) => product.id === id)
-}
-
-export function getProductsByCategory(category: string): Product[] {
-  return products.filter((product) => product.category === category)
-}
-
-// Backend types & mapping
+// Backend types
 export interface BackendProduct {
   id: number
   name: string
@@ -96,59 +54,54 @@ function mapBackendToFrontendProduct(p: BackendProduct): Product {
 // API calls
 export async function fetchAllProducts(): Promise<Product[]> {
   const res = await fetch(`${API_BASE_URL}/products`)
+
   if (!res.ok) throw new Error("Failed to fetch products")
+
   const data: BackendProduct[] = await res.json()
   return data.map(mapBackendToFrontendProduct)
 }
 
 export async function fetchProductById(id: number): Promise<Product | null> {
   const res = await fetch(`${API_BASE_URL}/products/${id}`)
+  //guard
   if (res.status === 404) return null
   if (!res.ok) throw new Error("Failed to fetch product")
+
   const data: BackendProduct = await res.json()
   return mapBackendToFrontendProduct(data)
 }
 
-export async function createProduct(input: {
-  name: string
-  description?: string
-  price: number
-  stock: number
-  images: string[]
-  categoryId: number
-}): Promise<Product> {
+export async function createProduct(input: CreateProductInput): Promise<Product> {
   const res = await fetch(`${API_BASE_URL}/products`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   })
+
   if (!res.ok) throw new Error("Failed to create product")
+
   const data: BackendProduct = await res.json()
   return mapBackendToFrontendProduct(data)
 }
 
 export async function updateProduct(
   id: number,
-  input: Partial<{
-    name: string
-    description?: string
-    price: number
-    stock: number
-    images: string[]
-    categoryId: number
-  }>
+  input: Partial<CreateProductInput>
 ): Promise<Product> {
   const res = await fetch(`${API_BASE_URL}/products/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   })
+
   if (!res.ok) throw new Error("Failed to update product")
+
   const data: BackendProduct = await res.json()
   return mapBackendToFrontendProduct(data)
 }
 
 export async function deleteProduct(id: number): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" })
+
   if (!res.ok) throw new Error("Failed to delete product")
 }
