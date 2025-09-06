@@ -13,6 +13,7 @@ import { EditCategoryModal } from "@/components/edit-category-modal"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
 import { fetchAllOrders } from "@/lib/orders"
+import { fetchAllUsers, type BackendUser } from "@/lib/api/users"
 import {
   LayoutDashboard,
   Package,
@@ -50,12 +51,6 @@ import {
 // Using Product type from lib/products
 
 
-const mockCustomers = [
-  { id: 1, name: "John Doe", email: "john@example.com", orders: 3, totalSpent: 389.97, lastOrder: "2024-01-15" },
-  { id: 2, name: "Jane Smith", email: "jane@example.com", orders: 1, totalSpent: 249.99, lastOrder: "2024-01-14" },
-  { id: 3, name: "Bob Johnson", email: "bob@example.com", orders: 2, totalSpent: 159.98, lastOrder: "2024-01-13" },
-  { id: 4, name: "Alice Brown", email: "alice@example.com", orders: 4, totalSpent: 599.96, lastOrder: "2024-01-12" },
-]
 
 const salesData = [
   { month: "Jan", sales: 12000, orders: 145 },
@@ -78,6 +73,7 @@ export default function AdminDashboard() {
   const [productList, setProductList] = useState<Product[]>([])
   const [orderList, setOrderList] = useState<BackendOrder[]>([])
   const [categoryList, setCategoryList] = useState<BackendCategory[]>([])
+  const [userList, setUserList] = useState<BackendUser[]>([])
   const [loading, setLoading] = useState(false)
   const [showAddCategory, setShowAddCategory] = useState(false)
   const [editingCategory, setEditingCategory] = useState<BackendCategory | null>(null)
@@ -106,9 +102,11 @@ export default function AdminDashboard() {
       const productsData = await fetchAllProducts()
       const ordersData = await fetchAllOrders()
       const categoriesData = await fetchAllCategories()
+      const usersData = await fetchAllUsers()
       setProductList(productsData)
       setOrderList(ordersData)
       setCategoryList(categoriesData)
+      setUserList(usersData)
     } finally {
       setLoading(false)
     }
@@ -443,7 +441,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-emerald-100">Customers</p>
-                        <p className="text-3xl font-bold text-white">0</p>
+                        <p className="text-3xl font-bold text-white">{userList.length}</p>
                       </div>
                       <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                         <Users className="w-6 h-6 text-white" />
@@ -781,6 +779,8 @@ export default function AdminDashboard() {
                       <thead className="border-b bg-muted/30">
                         <tr>
                           <th className="text-left p-4 font-medium">Order ID</th>
+                          <th className="text-left p-4 font-medium">User</th>
+                          <th className="text-left p-4 font-medium">Items</th>
                           <th className="text-left p-4 font-medium">Total</th>
                           <th className="text-left p-4 font-medium">Status</th>
                           <th className="text-left p-4 font-medium">Actions</th>
@@ -793,6 +793,8 @@ export default function AdminDashboard() {
                             className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? "bg-muted/5" : ""}`}
                           >
                             <td className="p-4 font-medium">{order.id}</td>
+                            <td className="p-4 font-medium">{order.user.email}</td>
+                            <td className="p-4 font-medium">{order.items.map((item) => item.product.name).join(", ")}</td>
                             <td className="p-4 font-medium">${order.total}</td>
                             <td className="p-4">
                               <Badge
@@ -840,37 +842,41 @@ export default function AdminDashboard() {
                     <table className="w-full">
                       <thead className="border-b bg-muted/30">
                         <tr>
-                          <th className="text-left p-4 font-medium">Customer</th>
+                          <th className="text-left p-4 font-medium">ID</th>
                           <th className="text-left p-4 font-medium">Email</th>
                           <th className="text-left p-4 font-medium">Orders</th>
                           <th className="text-left p-4 font-medium">Total Spent</th>
-                          <th className="text-left p-4 font-medium">Last Order</th>
-                          <th className="text-left p-4 font-medium">Actions</th>
+                          <th className="text-left p-4 font-medium">Addresses</th>
+                          <th className="text-left p-4 font-medium">Joined</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {mockCustomers.map((customer, index) => (
-                          <tr
-                            key={customer.id}
-                            className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? "bg-muted/5" : ""}`}
-                          >
-                            <td className="p-4 font-medium">{customer.name}</td>
-                            <td className="p-4 text-muted-foreground">{customer.email}</td>
-                            <td className="p-4">{customer.orders}</td>
-                            <td className="p-4 font-medium">${customer.totalSpent}</td>
-                            <td className="p-4 text-muted-foreground">{customer.lastOrder}</td>
-                            <td className="p-4">
-                              <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
+                        {userList.map((user, index) => {
+                          const totalSpent = user.orders.reduce((sum, order) => sum + order.total, 0)
+                          const lastOrder = user.orders.length > 0
+                            ? new Date(user.orders[user.orders.length - 1].createdAt).toLocaleDateString()
+                            : 'No orders'
+
+                          return (
+                            <tr
+                              key={user.id}
+                              className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? "bg-muted/5" : ""}`}
+                            >
+                              <td className="p-4 font-medium">{user.id}</td>
+                              <td className="p-4 text-muted-foreground">{user.email}</td>
+                              <td className="p-4">{user.orders.length}</td>
+                              <td className="p-4 font-medium">${totalSpent.toFixed(2)}</td>
+                              <td className="p-4">
+                                <Badge variant="outline">
+                                  {user.addresses.length} address{user.addresses.length !== 1 ? 'es' : ''}
+                                </Badge>
+                              </td>
+                              <td className="p-4 text-muted-foreground">
+                                {new Date(user.createdAt).toLocaleDateString()}
+                              </td>
+                            </tr>
+                          )
+                        })}
                       </tbody>
                     </table>
                   </div>
