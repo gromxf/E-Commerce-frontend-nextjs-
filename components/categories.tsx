@@ -3,7 +3,7 @@
 import React from "react"
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { fetchCategories, type BackendCategory } from "@/lib/categories"
+import { fetchCategories, type BackendCategory } from "@/lib/api/categories"
 
 const defaultImages = [
   "/modern-electronics.png",

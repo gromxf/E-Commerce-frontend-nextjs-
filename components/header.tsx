@@ -6,7 +6,7 @@ import { Search, User, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CartDrawer } from "@/components/cart-drawer"
-import { fetchCategories, type BackendCategory } from "@/lib/categories"
+import { fetchCategories, type BackendCategory } from "@/lib/api/categories"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)

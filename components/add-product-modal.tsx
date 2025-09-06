@@ -18,7 +18,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { X, Plus } from "lucide-react"
-import { fetchCategories, type BackendCategory } from "@/lib/categories"
+import { fetchCategories, type BackendCategory } from "@/lib/api/categories"
+import { ImageUpload } from "@/components/image-upload"
 
 type CreateProductPayload = {
   name: string
@@ -44,7 +45,6 @@ export function AddProductModal({ open, onOpenChange, onProductAdd }: AddProduct
   })
 
   const [images, setImages] = useState<string[]>([])
-  const [newImage, setNewImage] = useState("")
   const [backendCategories, setBackendCategories] = useState<BackendCategory[]>([])
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("")
 
@@ -60,16 +60,6 @@ export function AddProductModal({ open, onOpenChange, onProductAdd }: AddProduct
 
 
 
-  const addImage = () => {
-    if (newImage.trim()) {
-      setImages((prev) => [...prev, newImage.trim()])
-      setNewImage("")
-    }
-  }
-
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index))
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -96,7 +86,6 @@ export function AddProductModal({ open, onOpenChange, onProductAdd }: AddProduct
       stock: "",
     })
     setImages([])
-    setNewImage("")
     setSelectedCategoryId("")
   }
 
@@ -174,33 +163,15 @@ export function AddProductModal({ open, onOpenChange, onProductAdd }: AddProduct
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-primary">Images (URLs) & Description</h3>
+              <h3 className="text-lg font-semibold text-primary">Images & Description</h3>
 
-              <div className="space-y-2">
-                <Label>Add image URLs</Label>
-                <div className="flex gap-2">
-                  <Input value={newImage} onChange={(e) => setNewImage(e.target.value)} placeholder="Image URL" />
-                  <Button type="button" onClick={addImage} size="icon" variant="outline">
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {images.map((image, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      {image}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                        onClick={() => removeImage(index)}
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              </div>
+              <ImageUpload
+                images={images}
+                onImagesChange={setImages}
+                maxImages={5}
+                label="Product Images"
+                description="Upload images from your computer or add image URLs"
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>

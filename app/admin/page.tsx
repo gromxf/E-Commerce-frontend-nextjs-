@@ -12,7 +12,7 @@ import { EditProductModal } from "@/components/edit-product-modal"
 import { EditCategoryModal } from "@/components/edit-category-modal"
 import { Toaster } from "@/components/ui/toaster"
 import { useToast } from "@/hooks/use-toast"
-import { fetchAllOrders } from "@/lib/orders"
+import { fetchAllOrders } from "@/lib/api/orders"
 import { fetchAllUsers, type BackendUser } from "@/lib/api/users"
 import {
   LayoutDashboard,
@@ -20,9 +20,7 @@ import {
   ShoppingCart,
   Users,
   BarChart3,
-  Settings,
   Search,
-  Bell,
   Moon,
   Sun,
   Menu,
@@ -36,9 +34,9 @@ import {
   Filter,
   Tag,
 } from "lucide-react"
-import type { Product } from "@/lib/products"
-import { fetchAllProducts, createProduct, updateProduct, deleteProduct, type CreateProductInput } from "@/lib/products"
-import { BackendOrder } from "@/lib/orders"
+import type { Product } from "@/lib/api/products"
+import { fetchAllProducts, createProduct, updateProduct, deleteProduct, type CreateProductInput } from "@/lib/api/products"
+import { BackendOrder } from "@/lib/api/orders"
 import {
   fetchAllCategories,
   createCategory,
@@ -52,14 +50,6 @@ import {
 
 
 
-const salesData = [
-  { month: "Jan", sales: 12000, orders: 145 },
-  { month: "Feb", sales: 15000, orders: 178 },
-  { month: "Mar", sales: 18000, orders: 203 },
-  { month: "Apr", sales: 22000, orders: 234 },
-  { month: "May", sales: 19000, orders: 198 },
-  { month: "Jun", sales: 25000, orders: 267 },
-]
 
 export default function AdminDashboard() {
   const { toast } = useToast()
@@ -81,6 +71,27 @@ export default function AdminDashboard() {
   const [showEditProduct, setShowEditProduct] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [showEditCategory, setShowEditCategory] = useState(false)
+
+  // Generate sales data from actual orders
+  const generateSalesData = () => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const currentDate = new Date()
+
+    return months.slice(0, 12).map((month, index) => {
+      const monthOrders = orderList.filter((order: BackendOrder) => {
+        const orderDate = new Date(order.createdAt)
+        return orderDate.getMonth() === index && orderDate.getFullYear() === currentDate.getFullYear()
+      })
+
+      const sales = monthOrders.reduce((sum: number, order: BackendOrder) => sum + order.total, 0)
+
+      return {
+        month,
+        sales,
+        orders: monthOrders.length
+      }
+    })
+  }
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
@@ -243,8 +254,6 @@ export default function AdminDashboard() {
     { id: "categories", label: "Categories", icon: Tag },
     { id: "orders", label: "Orders", icon: ShoppingCart },
     { id: "customers", label: "Customers", icon: Users },
-    { id: "analytics", label: "Analytics", icon: BarChart3 },
-    { id: "settings", label: "Settings", icon: Settings },
   ]
 
   if (!isAuthenticated) {
@@ -396,7 +405,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm font-medium text-cyan-100">Total Revenue</p>
-                        <p className="text-3xl font-bold text-white">$45,231</p>
+                        <p className="text-3xl font-bold text-white">${orderList.reduce((sum, order) => sum + order.total, 0).toFixed(2)}</p>
                       </div>
                       <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                         <DollarSign className="w-6 h-6 text-white" />
@@ -463,7 +472,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent className="p-6">
                     <div className="space-y-4">
-                      {salesData.map((data, index) => (
+                      {generateSalesData().map((data, index) => (
                         <div
                           key={data.month}
                           className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 hover:shadow-md transition-all duration-200"
@@ -477,7 +486,6 @@ export default function AdminDashboard() {
                           </div>
                           <div className="text-right">
                             <p className="font-bold text-xl">${data.sales.toLocaleString()}</p>
-                            <p className="text-sm text-green-500 font-medium">+{Math.floor(Math.random() * 20 + 5)}%</p>
                           </div>
                         </div>
                       ))}
@@ -879,100 +887,6 @@ export default function AdminDashboard() {
                         })}
                       </tbody>
                     </table>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {activeTab === "analytics" && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      Sales Performance
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center p-3 rounded-lg bg-primary/5">
-                        <span className="font-medium">This Month</span>
-                        <span className="font-bold text-primary">$25,347</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
-                        <span className="font-medium">Last Month</span>
-                        <span className="font-bold">$21,234</span>
-                      </div>
-                      <div className="flex justify-between items-center p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
-                        <span className="font-medium text-green-700 dark:text-green-400">Growth</span>
-                        <span className="font-bold text-green-700 dark:text-green-400">+19.4%</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="border-0 shadow-sm">
-                  <CardHeader>
-                    <CardTitle>Top Categories</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {[
-                        { name: "Electronics", percentage: 35, color: "bg-primary" },
-                        { name: "Clothing", percentage: 25, color: "bg-secondary" },
-                        { name: "Home & Garden", percentage: 20, color: "bg-chart-3" },
-                        { name: "Sports & Fitness", percentage: 20, color: "bg-chart-5" },
-                      ].map((category) => (
-                        <div key={category.name} className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">{category.name}</span>
-                            <span className="font-bold">{category.percentage}%</span>
-                          </div>
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div
-                              className={`${category.color} h-2 rounded-full transition-all duration-500`}
-                              style={{ width: `${category.percentage}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "settings" && (
-            <div className="space-y-6">
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle>System Settings</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 rounded-lg border">
-                      <div>
-                        <h3 className="font-medium">Dark Mode</h3>
-                        <p className="text-sm text-muted-foreground">Toggle dark mode theme</p>
-                      </div>
-                      <Button variant="outline" onClick={toggleDarkMode}>
-                        {darkMode ? <Sun className="w-4 h-4 mr-2" /> : <Moon className="w-4 h-4 mr-2" />}
-                        {darkMode ? "Light Mode" : "Dark Mode"}
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between p-4 rounded-lg border">
-                      <div>
-                        <h3 className="font-medium">Notifications</h3>
-                        <p className="text-sm text-muted-foreground">Manage notification preferences</p>
-                      </div>
-                      <Button variant="outline">
-                        <Bell className="w-4 h-4 mr-2" />
-                        Configure
-                      </Button>
-                    </div>
                   </div>
                 </CardContent>
               </Card>

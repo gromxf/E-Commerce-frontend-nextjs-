@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { AddToCartButton } from "@/components/add-to-cart-button"
 import { Star, Heart } from "lucide-react"
 import Link from "next/link"
-import type { Product } from "@/lib/products"
+import type { Product } from "@/lib/api/products"
 
 interface ProductGridProps {
   products: Product[]
@@ -40,16 +40,6 @@ export function ProductGrid({ products, loading = false }: ProductGridProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-muted-foreground">Showing {products.length} products</p>
-        <select className="border border-border rounded-md px-3 py-2 bg-background">
-          <option>Sort by: Featured</option>
-          <option>Price: Low to High</option>
-          <option>Price: High to Low</option>
-          <option>Newest First</option>
-        </select>
-      </div>
-
       {products.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground text-lg">No products found</p>

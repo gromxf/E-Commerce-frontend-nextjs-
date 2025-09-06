@@ -50,3 +50,14 @@ export async function fetchAllOrders(): Promise<BackendOrder[]> {
     return data
 }
 
+export async function validateStock(items: OrderItem[]): Promise<{ valid: boolean; errors: string[] }> {
+    const res = await fetch(`${API_BASE_URL}/orders/validate-stock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items }),
+    })
+    if (!res.ok) throw new Error("Failed to validate stock")
+    const data = await res.json()
+    return data
+}
+

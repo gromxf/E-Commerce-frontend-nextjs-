@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { fetchProductById } from "@/lib/products"
+import { fetchProductById } from "@/lib/api/products"
 import { ProductDetails } from "@/components/product-details"
 import { SimilarProducts } from "@/components/similar-products"
 

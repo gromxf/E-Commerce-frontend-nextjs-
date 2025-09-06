@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AddToCartButton } from "@/components/add-to-cart-button"
 import { Star, Heart, Truck, Shield, RotateCcw } from "lucide-react"
-import type { Product } from "@/lib/products"
+import type { Product } from "@/lib/api/products"
 import Link from "next/link"
 
 interface ProductDetailsProps {
@@ -17,11 +17,32 @@ interface ProductDetailsProps {
 export function ProductDetails({ product }: ProductDetailsProps) {
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const galleryImages = (Array.isArray((product as any).images) && (product as any).images.length
-    ? (product as any).images
-    : [product.image]) as string[]
+
+  // Get all images from the product, fallback to single image if no images array
+  const galleryImages = product.images && product.images.length > 0
+    ? product.images
+    : [product.image]
+
   const features: string[] = ((product as any).features ?? []) as string[]
   const specifications: Record<string, string> = ((product as any).specifications ?? {}) as Record<string, string>
+
+  // Keyboard navigation for image gallery
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (galleryImages.length <= 1) return
+
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        setSelectedImage(selectedImage > 0 ? selectedImage - 1 : galleryImages.length - 1)
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        setSelectedImage(selectedImage < galleryImages.length - 1 ? selectedImage + 1 : 0)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedImage, galleryImages.length])
 
   return (
     <div className="space-y-8">
@@ -41,28 +62,70 @@ export function ProductDetails({ product }: ProductDetailsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Product Images */}
         <div className="space-y-4">
-          <div className="aspect-square relative overflow-hidden rounded-lg bg-muted">
+          {/* Main Image Display */}
+          <div className="aspect-square relative overflow-hidden rounded-lg bg-muted group">
             <img
               src={galleryImages[selectedImage] || "/placeholder.svg"}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = "/placeholder.svg"
+              }}
             />
 
+            {/* Image Counter */}
+            {galleryImages.length > 1 && (
+              <div className="absolute top-4 right-4 bg-black/70 text-white px-2 py-1 rounded-md text-sm">
+                {selectedImage + 1} / {galleryImages.length}
+              </div>
+            )}
+
+            {/* Navigation Arrows */}
+            {galleryImages.length > 1 && (
+              <>
+                <button
+                  onClick={() => setSelectedImage(selectedImage > 0 ? selectedImage - 1 : galleryImages.length - 1)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                  aria-label="Previous image"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setSelectedImage(selectedImage < galleryImages.length - 1 ? selectedImage + 1 : 0)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                  aria-label="Next image"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </>
+            )}
           </div>
 
+          {/* Thumbnail Gallery */}
           {galleryImages.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto">
+            <div className="flex gap-2 overflow-x-auto pb-2">
               {galleryImages.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
-                  className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-colors ${selectedImage === index ? "border-primary" : "border-border"
+                  className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${selectedImage === index
+                    ? "border-primary ring-2 ring-primary/20"
+                    : "border-border hover:border-primary/50"
                     }`}
                 >
                   <img
                     src={image || "/placeholder.svg"}
                     alt={`${product.name} view ${index + 1}`}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement
+                      target.src = "/placeholder.svg"
+                    }}
                   />
                 </button>
               ))}
@@ -130,26 +193,8 @@ export function ProductDetails({ product }: ProductDetailsProps) {
 
             <div className="flex gap-3">
               <AddToCartButton product={product} quantity={quantity} className="flex-1" />
-              <Button variant="outline" size="icon">
-                <Heart className="h-4 w-4" />
-              </Button>
             </div>
           </div>
-
-          {/* Features */}
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-3">Key Features</h3>
-              <ul className="space-y-2">
-                {features.map((feature, index) => (
-                  <li key={index} className="flex items-center gap-2 text-sm">
-                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
 
           {/* Shipping Info */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
@@ -168,38 +213,6 @@ export function ProductDetails({ product }: ProductDetailsProps) {
           </div>
         </div>
       </div>
-
-      {/* Product Details Tabs */}
-      <Tabs defaultValue="specifications" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="specifications">Specifications</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="specifications" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-4">Product Specifications</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Object.entries(specifications).map(([key, value]) => (
-                  <div key={key} className="flex justify-between py-2 border-b border-border">
-                    <span className="font-medium">{key}:</span>
-                    <span className="text-muted-foreground">{value}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reviews" className="mt-6">
-          <Card>
-            <CardContent className="p-6">
-              <h3 className="font-semibold mb-4">Customer Reviews</h3>
-              <p className="text-muted-foreground">Reviews feature coming soon...</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

@@ -17,8 +17,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { X, Plus, Edit } from "lucide-react"
-import { fetchCategories, type BackendCategory } from "@/lib/categories"
-import type { Product, CreateProductInput } from "@/lib/products"
+import { fetchCategories, type BackendCategory } from "@/lib/api/categories"
+import type { Product, CreateProductInput } from "@/lib/api/products"
+import { ImageUpload } from "@/components/image-upload"
 
 interface EditProductModalProps {
     open: boolean
@@ -183,31 +184,26 @@ export function EditProductModal({ open, onOpenChange, onProductUpdate, product 
                         </div>
 
                         <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-primary">Images (URLs) & Description</h3>
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-semibold text-primary">Images & Description</h3>
 
-                            <div className="space-y-2">
-                                <Label>Add image URLs</Label>
-                                <div className="flex gap-2">
-                                    <Input value={newImage} onChange={(e) => setNewImage(e.target.value)} placeholder="Image URL" />
-                                    <Button type="button" onClick={addImage} size="icon" variant="outline">
-                                        <Plus className="w-4 h-4" />
-                                    </Button>
-                                </div>
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {images.map((image, index) => (
-                                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                                            {image}
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
-                                                onClick={() => removeImage(index)}
-                                            >
-                                                <X className="w-3 h-3" />
-                                            </Button>
-                                        </Badge>
-                                    ))}
+                                <ImageUpload
+                                    images={images}
+                                    onImagesChange={setImages}
+                                    maxImages={5}
+                                    label="Product Images"
+                                    description="Upload images from your computer or add image URLs"
+                                />
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">Description</Label>
+                                    <Textarea
+                                        id="description"
+                                        value={formData.description}
+                                        onChange={(e) => handleInputChange("description", e.target.value)}
+                                        placeholder="Enter product description (optional)"
+                                        rows={4}
+                                    />
                                 </div>
                             </div>
 

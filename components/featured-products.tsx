@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AddToCartButton } from "@/components/add-to-cart-button"
 import { Heart } from "lucide-react"
-import { fetchAllProducts, type Product } from "@/lib/products"
+import { fetchAllProducts, type Product } from "@/lib/api/products"
 
 export function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = React.useState<Product[]>([])

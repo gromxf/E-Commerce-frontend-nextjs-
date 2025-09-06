@@ -6,8 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { fetchCategories } from "@/lib/categories"
-import type { BackendCategory } from "@/lib/categories"
+import { fetchCategories, type BackendCategory } from "@/lib/api/categories"
 
 const brands = ["Apple", "Samsung", "Nike", "Adidas", "Sony", "Canon"]
 
@@ -15,10 +14,19 @@ interface ProductFiltersProps {
   currentCategory?: string
   selectedCategories: number[]
   onCategoryChange: (categoryIds: number[]) => void
+  priceRange: [number, number]
+  onPriceRangeChange: (priceRange: [number, number]) => void
+  maxPrice?: number
 }
 
-export function ProductFilters({ currentCategory, selectedCategories, onCategoryChange }: ProductFiltersProps) {
-  const [priceRange, setPriceRange] = useState([0, 1000])
+export function ProductFilters({
+  currentCategory,
+  selectedCategories,
+  onCategoryChange,
+  priceRange,
+  onPriceRangeChange,
+  maxPrice = 10000
+}: ProductFiltersProps) {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([])
   const [categories, setCategories] = useState<BackendCategory[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,7 +55,7 @@ export function ProductFilters({ currentCategory, selectedCategories, onCategory
   }
 
   const clearFilters = () => {
-    setPriceRange([0, 10000])
+    onPriceRangeChange([0, maxPrice])
     onCategoryChange([])
   }
 
@@ -61,7 +69,7 @@ export function ProductFilters({ currentCategory, selectedCategories, onCategory
       </div>
 
       {/* Active Filters */}
-      {(selectedCategories.length > 0 || selectedBrands.length > 0) && (
+      {(selectedCategories.length > 0 || selectedBrands.length > 0 || (priceRange[0] > 0 || priceRange[1] < maxPrice)) && (
         <Card>
           <CardHeader>
             <CardTitle className="text-sm">Active Filters</CardTitle>
@@ -76,6 +84,11 @@ export function ProductFilters({ currentCategory, selectedCategories, onCategory
                   </Badge>
                 )
               })}
+              {(priceRange[0] > 0 || priceRange[1] < maxPrice) && (
+                <Badge variant="secondary" className="cursor-pointer">
+                  ${priceRange[0]} - ${priceRange[1]}
+                </Badge>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -87,7 +100,7 @@ export function ProductFilters({ currentCategory, selectedCategories, onCategory
           <CardTitle className="text-sm">Price Range</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Slider value={priceRange} onValueChange={setPriceRange} max={10000} step={10} className="w-full" />
+          <Slider value={priceRange} onValueChange={onPriceRangeChange} max={maxPrice} step={10} className="w-full" />
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>${priceRange[0]}</span>
             <span>${priceRange[1]}</span>

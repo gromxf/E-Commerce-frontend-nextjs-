@@ -1,4 +1,3 @@
-// lib/products.ts
 
 // Interfața produsului simplificată
 export interface Product {
@@ -11,6 +10,7 @@ export interface Product {
   categoryId?: number
   inStock: boolean
   stockCount: number
+  images?: string[]
 }
 
 export interface CreateProductInput {
@@ -38,16 +38,18 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 
 // Transformă backend product în frontend product
 function mapBackendToFrontendProduct(p: BackendProduct): Product {
+  const imageUrls = p.images?.map(img => img.url) || []
   return {
     id: p.id,
     name: p.name,
     price: p.price,
-    image: p.images?.[0]?.url || "/placeholder.svg",
+    image: imageUrls[0] || "/placeholder.svg",
     description: p.description || "",
     category: p.category?.name || "General",
     categoryId: p.categoryId,
     inStock: (p.stock ?? 0) > 0,
     stockCount: p.stock ?? 0,
+    images: imageUrls,
   }
 }
 

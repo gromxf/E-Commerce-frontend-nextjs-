@@ -5,29 +5,50 @@ import { useSearchParams } from "next/navigation"
 import { ProductGrid } from "@/components/product-grid"
 import { ProductFilters } from "@/components/product-filters"
 import { Badge } from "@/components/ui/badge"
-import { fetchAllProducts } from "@/lib/products"
-import { fetchCategories } from "@/lib/categories"
-import type { Product } from "@/lib/products"
-import type { BackendCategory } from "@/lib/categories"
+import { fetchAllProducts } from "@/lib/api/products"
+import { fetchCategories } from "@/lib/api/categories"
+import type { Product } from "@/lib/api/products"
+import type { BackendCategory } from "@/lib/api/categories"
 
 export default function ProductsPage() {
   const searchParams = useSearchParams()
-  const [products, setProducts] = useState<Product[]>([])
+  const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategories, setSelectedCategories] = useState<number[]>([])
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000])
+  const [maxPrice, setMaxPrice] = useState(1000)
   const [categories, setCategories] = useState<BackendCategory[]>([])
 
   const loadProducts = async (categoryIds?: number[]) => {
     try {
       setLoading(true)
       const data = await fetchAllProducts(categoryIds)
-      setProducts(data)
+      setAllProducts(data)
+      setFilteredProducts(data)
+
+      // Update price range based on actual product prices
+      if (data.length > 0) {
+        const prices = data.map(p => p.price)
+        const minPrice = Math.floor(Math.min(...prices))
+        const maxPrice = Math.ceil(Math.max(...prices))
+        setMaxPrice(maxPrice)
+        setPriceRange([minPrice, maxPrice])
+      }
     } catch (error) {
       console.error('Failed to fetch products:', error)
-      setProducts([]) // Set empty array on error
+      setAllProducts([])
+      setFilteredProducts([])
     } finally {
       setLoading(false)
     }
+  }
+
+  // Filter products based on price range
+  const applyPriceFilter = (products: Product[], priceRange: [number, number]) => {
+    return products.filter(product =>
+      product.price >= priceRange[0] && product.price <= priceRange[1]
+    )
   }
 
   useEffect(() => {
@@ -63,6 +84,18 @@ export default function ProductsPage() {
     loadProducts(categoryIds.length > 0 ? categoryIds : undefined)
   }
 
+  const handlePriceRangeChange = (newPriceRange: [number, number]) => {
+    setPriceRange(newPriceRange)
+    const priceFiltered = applyPriceFilter(allProducts, newPriceRange)
+    setFilteredProducts(priceFiltered)
+  }
+
+  // Update filtered products when allProducts or priceRange changes
+  useEffect(() => {
+    const priceFiltered = applyPriceFilter(allProducts, priceRange)
+    setFilteredProducts(priceFiltered)
+  }, [allProducts, priceRange])
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -95,10 +128,13 @@ export default function ProductsPage() {
             <ProductFilters
               selectedCategories={selectedCategories}
               onCategoryChange={handleCategoryChange}
+              priceRange={priceRange}
+              onPriceRangeChange={handlePriceRangeChange}
+              maxPrice={maxPrice}
             />
           </aside>
           <div className="lg:col-span-3">
-            <ProductGrid products={products} loading={loading} />
+            <ProductGrid products={filteredProducts} loading={loading} />
           </div>
         </div>
       </div>

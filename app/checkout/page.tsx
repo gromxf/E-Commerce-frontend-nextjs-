@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useCart } from "@/lib/cart-context"
-import { createOrder, type CreateOrderInput } from "@/lib/orders"
+import { createOrder, validateStock, type CreateOrderInput } from "@/lib/api/orders"
 import { createUser, type CreateUserInput } from "@/lib/api/users"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,6 +48,20 @@ export default function CheckoutPage() {
     setIsProcessing(true)
 
     try {
+      // Create order items from cart
+      const orderItems = state.items.map((item) => ({
+        productId: item.id,
+        quantity: item.quantity,
+        price: item.price,
+      }))
+
+      // Validate stock before processing
+      const stockValidation = await validateStock(orderItems)
+      if (!stockValidation.valid) {
+        alert(`Stock validation failed:\n${stockValidation.errors.join('\n')}`)
+        return
+      }
+
       // Create user with address information
       const userPayload: CreateUserInput = {
         email: formData.email,
@@ -61,13 +75,6 @@ export default function CheckoutPage() {
       // Create or get existing user
       const user = await createUser(userPayload)
       console.log("User created/retrieved:", user)
-
-      // Create order items from cart
-      const orderItems = state.items.map((item) => ({
-        productId: item.id,
-        quantity: item.quantity,
-        price: item.price,
-      }))
 
       // Create order payload matching DTO structure
       const orderPayload: CreateOrderInput = {
@@ -84,7 +91,8 @@ export default function CheckoutPage() {
       router.push("/checkout/success")
     } catch (error) {
       console.error("Failed to process order:", error)
-      alert("Failed to process order. Please try again.")
+      const errorMessage = error instanceof Error ? error.message : "Failed to process order. Please try again."
+      alert(errorMessage)
     } finally {
       setIsProcessing(false)
     }
