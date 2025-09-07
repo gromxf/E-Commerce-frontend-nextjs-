@@ -39,7 +39,7 @@ export function Categories() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading ? (
             // Loading skeleton
             Array.from({ length: 6 }).map((_, i) => (
@@ -65,7 +65,6 @@ export function Categories() {
                         <h3 className="text-xl font-semibold mb-2 group-hover:text-primary transition-colors">
                           {category.name}
                         </h3>
-                        <p className="text-muted-foreground">Browse products</p>
                       </div>
                     </CardContent>
                   </Card>

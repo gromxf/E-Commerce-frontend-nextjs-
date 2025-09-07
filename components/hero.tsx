@@ -16,10 +16,6 @@ export function Hero() {
               service.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" className="text-lg px-8">
-                Shop Now
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
               <Button variant="outline" size="lg" className="text-lg px-8 bg-transparent" asChild>
                 <Link href="/products">
                   View All Products

@@ -20,7 +20,7 @@ export function ProductGrid({ products, loading = false }: ProductGridProps) {
         <div className="flex items-center justify-between">
           <p className="text-muted-foreground">Loading products...</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <Card key={i} className="bg-card border-border">
               <CardContent className="p-0">
@@ -46,7 +46,7 @@ export function ProductGrid({ products, loading = false }: ProductGridProps) {
           <p className="text-muted-foreground text-sm mt-2">Try adjusting your filters</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {products.map((product) => (
             <Card
               key={product.id}
