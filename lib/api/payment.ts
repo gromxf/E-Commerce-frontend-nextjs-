@@ -34,6 +34,7 @@ export async function processPaymentInfo(paymentInfo: PaymentInfo): Promise<Paym
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(paymentInfo),
+        credentials: 'include',
     })
     if (!res.ok) throw new Error("Failed to process payment information")
 

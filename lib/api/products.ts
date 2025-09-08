@@ -63,7 +63,7 @@ export async function fetchAllProducts(categoryIds?: number[]): Promise<Product[
     url += `?${categoryParams}`
   }
 
-  const res = await fetch(url)
+  const res = await fetch(url, { credentials: 'include' })
 
   if (!res.ok) throw new Error("Failed to fetch products")
 
@@ -72,7 +72,7 @@ export async function fetchAllProducts(categoryIds?: number[]): Promise<Product[
 }
 
 export async function fetchProductById(id: number): Promise<Product | null> {
-  const res = await fetch(`${API_BASE_URL}/products/${id}`, { cache: "no-store" })
+  const res = await fetch(`${API_BASE_URL}/products/${id}`, { cache: "no-store", credentials: 'include' })
   //guard
   if (res.status === 404) return null
   if (!res.ok) throw new Error("Failed to fetch product")
@@ -82,10 +82,12 @@ export async function fetchProductById(id: number): Promise<Product | null> {
 }
 
 export async function createProduct(input: CreateProductInput): Promise<Product> {
+
   const res = await fetch(`${API_BASE_URL}/products`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
+    credentials: 'include',
   })
 
   if (!res.ok) throw new Error("Failed to create product")
@@ -102,6 +104,7 @@ export async function updateProduct(
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
+    credentials: 'include',
   })
 
   if (!res.ok) throw new Error("Failed to update product")
@@ -111,13 +114,13 @@ export async function updateProduct(
 }
 
 export async function deleteProduct(id: number): Promise<void> {
-  const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" })
+  const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE", credentials: 'include' })
 
   if (!res.ok) throw new Error("Failed to delete product")
 }
 
 export async function fetchSimilarProducts(categoryId: number, excludeProductId: number, limit: number = 6): Promise<Product[]> {
-  const res = await fetch(`${API_BASE_URL}/products?categoryId=${categoryId}`)
+  const res = await fetch(`${API_BASE_URL}/products?categoryId=${categoryId}`, { credentials: 'include' })
 
   if (!res.ok) throw new Error("Failed to fetch similar products")
 

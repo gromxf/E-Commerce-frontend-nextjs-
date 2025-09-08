@@ -39,12 +39,13 @@ export async function createOrder(input: CreateOrderInput): Promise<void> {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
+        credentials: 'include',
     })
     if (!res.ok) throw new Error("Failed to create order")
 }
 
 export async function fetchAllOrders(): Promise<BackendOrder[]> {
-    const res = await fetch(`${API_BASE_URL}/orders`, { next: { revalidate: 60 } })
+    const res = await fetch(`${API_BASE_URL}/orders`, { next: { revalidate: 60 }, credentials: 'include' })
     if (!res.ok) throw new Error("Failed to fetch orders")
     const data: BackendOrder[] = await res.json()
     return data
@@ -55,6 +56,7 @@ export async function validateStock(items: OrderItem[]): Promise<{ valid: boolea
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items }),
+        credentials: 'include',
     })
     if (!res.ok) throw new Error("Failed to validate stock")
     const data = await res.json()

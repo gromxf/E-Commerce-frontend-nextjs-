@@ -18,7 +18,7 @@ export interface UpdateCategoryInput {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 
 export async function fetchAllCategories(): Promise<BackendCategory[]> {
-    const res = await fetch(`${API_BASE_URL}/categories`)
+    const res = await fetch(`${API_BASE_URL}/categories`, { credentials: 'include' })
     if (!res.ok) {
         const errorText = await res.text()
         throw new Error(`Failed to fetch categories: ${errorText}`)
@@ -27,7 +27,7 @@ export async function fetchAllCategories(): Promise<BackendCategory[]> {
 }
 
 export async function fetchCategoryById(id: number): Promise<BackendCategory> {
-    const res = await fetch(`${API_BASE_URL}/categories/${id}`)
+    const res = await fetch(`${API_BASE_URL}/categories/${id}`, { credentials: 'include' })
     if (!res.ok) {
         const errorText = await res.text()
         throw new Error(`Failed to fetch category: ${errorText}`)
@@ -42,6 +42,7 @@ export async function createCategory(category: CreateCategoryInput): Promise<Bac
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(category),
+        credentials: 'include',
     })
 
     if (!res.ok) {
@@ -59,6 +60,7 @@ export async function updateCategory(id: number, category: UpdateCategoryInput):
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(category),
+        credentials: 'include',
     })
 
     if (!res.ok) {
@@ -72,6 +74,7 @@ export async function updateCategory(id: number, category: UpdateCategoryInput):
 export async function deleteCategory(id: number): Promise<void> {
     const res = await fetch(`${API_BASE_URL}/categories/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
     })
 
     if (!res.ok) {

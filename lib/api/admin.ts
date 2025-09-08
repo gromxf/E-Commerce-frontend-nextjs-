@@ -5,6 +5,7 @@ export async function adminLogin(user: string, password: string): Promise<string
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user, password }),
+        credentials: 'include',
     })
     if (!res.ok) {
         const text = await res.text()
@@ -15,7 +16,7 @@ export async function adminLogin(user: string, password: string): Promise<string
 }
 
 export async function fetchAdminData<T = any>(): Promise<T> {
-    const res = await fetchWithAuth(`${getApiUrl()}/admin/data`)
+    const res = await fetchWithAuth(`${getApiUrl()}/admin/data`, { credentials: 'include' } as RequestInit)
     if (res.status === 401 || res.status === 403) {
         throw new Error('Unauthorized')
     }

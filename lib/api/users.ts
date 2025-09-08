@@ -47,7 +47,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 
 export async function fetchAllUsers(): Promise<BackendUser[]> {
     const res = await fetch(`${API_BASE_URL}/users`, {
-        next: { revalidate: 60 }
+        next: { revalidate: 60 },
+        credentials: 'include'
     })
     if (!res.ok) throw new Error("Failed to fetch users")
     const data: BackendUser[] = await res.json()
@@ -59,6 +60,7 @@ export async function createUser(input: CreateUserInput): Promise<BackendUser> {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(input),
+        credentials: 'include',
     })
     if (!res.ok) throw new Error("Failed to create user")
     const data: BackendUser = await res.json()
