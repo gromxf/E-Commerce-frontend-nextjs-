@@ -25,7 +25,6 @@ import {
   Sun,
   Menu,
   X,
-  TrendingUp,
   DollarSign,
   Eye,
   Edit,
@@ -45,6 +44,8 @@ import {
   type BackendCategory,
   type CreateCategoryInput
 } from "@/lib/api/category"
+import { adminLogin } from "@/lib/api/admin"
+import { clearToken, getToken, setToken } from "@/lib/auth"
 
 // Using Product type from lib/products
 
@@ -54,7 +55,7 @@ import {
 export default function AdminDashboard() {
   const { toast } = useToast()
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [credentials, setCredentials] = useState({ username: "", password: "" })
+  const [credentials, setCredentials] = useState({ user: "", password: "" })
   const [activeTab, setActiveTab] = useState("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
@@ -93,12 +94,20 @@ export default function AdminDashboard() {
     })
   }
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (credentials.username === "admin" && credentials.password === "admin123") {
+    try {
+      const token = await adminLogin(credentials.user, credentials.password)
+      setToken(token)
       setIsAuthenticated(true)
-    } else {
-      alert("Invalid credentials. Use admin/admin123")
+      toast({ title: "Logged in" })
+      await loadData()
+    } catch (err) {
+      toast({
+        title: "Login failed",
+        description: err instanceof Error ? err.message : "",
+        variant: "destructive",
+      })
     }
   }
 
@@ -124,9 +133,11 @@ export default function AdminDashboard() {
   }
 
   React.useEffect(() => {
-    if (isAuthenticated) {
-      loadData()
-    }
+    const existing = getToken()
+    if (existing) setIsAuthenticated(true)
+  }, [])
+  React.useEffect(() => {
+    if (isAuthenticated) void loadData()
   }, [isAuthenticated])
 
   const handleAddProduct = async (newProduct: CreateProductInput) => {
@@ -272,14 +283,14 @@ export default function AdminDashboard() {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="username" className="text-sm font-medium">
-                  Username
+                <Label htmlFor="user" className="text-sm font-medium">
+                  User
                 </Label>
                 <Input
-                  id="username"
-                  value={credentials.username}
-                  onChange={(e) => setCredentials((prev) => ({ ...prev, username: e.target.value }))}
-                  placeholder="Enter username"
+                  id="user"
+                  value={credentials.user}
+                  onChange={(e) => setCredentials((prev) => ({ ...prev, user: e.target.value }))}
+                  placeholder="Enter user"
                   className="h-11 border-2 focus:border-cyan-500 transition-colors"
                   required
                 />
@@ -304,11 +315,7 @@ export default function AdminDashboard() {
               >
                 Sign In
               </Button>
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground bg-gradient-to-r from-cyan-50 to-orange-50 dark:from-cyan-950/50 dark:to-orange-950/50 rounded-md p-2">
-                  Demo: admin / admin123
-                </p>
-              </div>
+              <div className="text-center" />
             </form>
           </CardContent>
         </Card>
@@ -385,7 +392,7 @@ export default function AdminDashboard() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => setIsAuthenticated(false)}
+                onClick={() => { setIsAuthenticated(false); clearToken(); }}
                 className="border-2 hover:bg-gradient-to-r hover:from-cyan-50 hover:to-orange-50 dark:hover:from-cyan-950/20 dark:hover:to-orange-950/20"
               >
                 Logout
@@ -791,7 +798,6 @@ export default function AdminDashboard() {
                           <th className="text-left p-4 font-medium">Items</th>
                           <th className="text-left p-4 font-medium">Total</th>
                           <th className="text-left p-4 font-medium">Status</th>
-                          <th className="text-left p-4 font-medium">Actions</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -802,7 +808,7 @@ export default function AdminDashboard() {
                           >
                             <td className="p-4 font-medium">{order.id}</td>
                             <td className="p-4 font-medium">{order.user.email}</td>
-                            <td className="p-4 font-medium">{order.items.map((item) => item.product.name).join(", ")}</td>
+                            <td className="p-4 font-medium">{order.items.map((item) => item.product.name).join(", ") || "Deleted item"}</td>
                             <td className="p-4 font-medium">${order.total}</td>
                             <td className="p-4">
                               <Badge
@@ -818,16 +824,6 @@ export default function AdminDashboard() {
                               >
                                 {order.status}
                               </Badge>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center space-x-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              </div>
                             </td>
                           </tr>
                         ))}

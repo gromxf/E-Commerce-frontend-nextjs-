@@ -36,6 +36,7 @@ export async function processPaymentInfo(paymentInfo: PaymentInfo): Promise<Paym
         body: JSON.stringify(paymentInfo),
     })
     if (!res.ok) throw new Error("Failed to process payment information")
+
     const data: PaymentResponse = await res.json()
     return data
 }
