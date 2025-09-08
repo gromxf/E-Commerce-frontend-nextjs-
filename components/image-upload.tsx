@@ -27,6 +27,7 @@ export function ImageUpload({
     const [isDragOver, setIsDragOver] = useState(false)
     const [isUploading, setIsUploading] = useState(false)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024
 
     const handleFileSelect = async (files: FileList | null) => {
         if (!files) return
@@ -34,12 +35,18 @@ export function ImageUpload({
         const fileArray = Array.from(files)
         const imageFiles = fileArray.filter(file => file.type.startsWith('image/'))
 
-        if (imageFiles.length === 0) {
+        const tooLarge = imageFiles.filter(file => file.size > MAX_SIZE_BYTES)
+        if (tooLarge.length > 0) {
+            alert(`Each image must be 5MB or smaller. ${tooLarge.length} file(s) exceeded the limit.`)
+        }
+        const validSizeImages = imageFiles.filter(file => file.size <= MAX_SIZE_BYTES)
+
+        if (validSizeImages.length === 0) {
             alert('Please select only image files')
             return
         }
 
-        if (images.length + imageFiles.length > maxImages) {
+        if (images.length + validSizeImages.length > maxImages) {
             alert(`You can only upload up to ${maxImages} images`)
             return
         }
@@ -49,7 +56,7 @@ export function ImageUpload({
         try {
             const newImageUrls: string[] = []
 
-            for (const file of imageFiles) {
+            for (const file of validSizeImages) {
                 // Convert file to base64 data URL
                 const dataUrl = await fileToDataUrl(file)
                 newImageUrls.push(dataUrl)
@@ -157,7 +164,7 @@ export function ImageUpload({
                                     {isDragOver ? "Drop images here" : "Click to upload or drag and drop"}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                    PNG, JPG, GIF up to 10MB each
+                                    PNG, JPG, GIF up to 5MB each
                                 </p>
                             </div>
                         </>

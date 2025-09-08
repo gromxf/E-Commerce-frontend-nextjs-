@@ -1,4 +1,5 @@
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 // Interfața produsului simplificată
 export interface Product {
   id: number
@@ -33,8 +34,6 @@ export interface BackendProduct {
   category?: { id: number; name: string }
   images: { id: number; url: string }[]
 }
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 
 // Transformă backend product în frontend product
 function mapBackendToFrontendProduct(p: BackendProduct): Product {
