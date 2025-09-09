@@ -206,17 +206,6 @@ export function EditProductModal({ open, onOpenChange, onProductUpdate, product 
                                     />
                                 </div>
                             </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Description</Label>
-                                <Textarea
-                                    id="description"
-                                    value={formData.description}
-                                    onChange={(e) => handleInputChange("description", e.target.value)}
-                                    placeholder="Enter product description (optional)"
-                                    rows={4}
-                                />
-                            </div>
                         </div>
                     </div>
 
