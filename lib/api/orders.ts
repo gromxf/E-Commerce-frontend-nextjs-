@@ -16,7 +16,7 @@ export interface BackendOrder {
     id: number
     userId: number
     total: number
-    status: string
+    paymentStatus: 'UNPAID' | 'PAID' | 'REFUNDED'
     createdAt: string
     items: {
         id: number
@@ -34,7 +34,7 @@ export interface BackendOrder {
     }
 }
 
-export async function createOrder(input: CreateOrderInput): Promise<void> {
+export async function createOrder(input: CreateOrderInput): Promise<BackendOrder> {
     const res = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,6 +42,8 @@ export async function createOrder(input: CreateOrderInput): Promise<void> {
         credentials: 'include',
     })
     if (!res.ok) throw new Error("Failed to create order")
+    const data: BackendOrder = await res.json()
+    return data
 }
 
 export async function fetchAllOrders(): Promise<BackendOrder[]> {
@@ -61,5 +63,30 @@ export async function validateStock(items: OrderItem[]): Promise<{ valid: boolea
     if (!res.ok) throw new Error("Failed to validate stock")
     const data = await res.json()
     return data
+}
+
+export async function createDraftOrder(item: OrderItem): Promise<BackendOrder> {
+    const res = await fetch(`${API_BASE_URL}/orders/draft`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ item }),
+        credentials: 'include',
+    })
+    if (!res.ok) throw new Error('Failed to create draft order')
+    return res.json()
+}
+
+export async function finalizeOrder(
+    id: number,
+    body: { userId: number; total: number; items: OrderItem[]; paymentInfo: any }
+): Promise<BackendOrder> {
+    const res = await fetch(`${API_BASE_URL}/orders/${id}/finalize`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        credentials: 'include',
+    })
+    if (!res.ok) throw new Error('Failed to finalize order')
+    return res.json()
 }
 

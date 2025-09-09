@@ -6,6 +6,7 @@ import { useState } from "react"
 import { useCart } from "@/lib/cart-context"
 import { createOrder, validateStock, type CreateOrderInput } from "@/lib/api/orders"
 import { createUser, type CreateUserInput } from "@/lib/api/users"
+import { processPaymentInfo } from "@/lib/api/payment"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -83,8 +84,23 @@ export default function CheckoutPage() {
         items: orderItems,
       }
 
-      // Create order in backend
-      await createOrder(orderPayload)
+      // Create order in backend and capture order id
+      const order = await createOrder(orderPayload)
+
+      // Send payment info to backend to mark payment status for this order
+      await processPaymentInfo({
+        orderId: order.id,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        address: formData.address,
+        city: formData.city,
+        zipCode: formData.zipCode,
+        cardNumber: formData.cardNumber,
+        expiryDate: formData.expiry,
+        cvv: formData.cvv,
+        paymentMethod,
+      })
 
       // Clear cart and redirect to success page
       dispatch({ type: "CLEAR_CART" })

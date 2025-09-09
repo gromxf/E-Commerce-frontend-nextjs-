@@ -1,4 +1,5 @@
 export interface PaymentInfo {
+    orderId: number
     firstName: string
     lastName: string
     email: string

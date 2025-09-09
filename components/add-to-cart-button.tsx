@@ -3,6 +3,7 @@
 import { useCart } from "@/lib/cart-context"
 import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
+import { createDraftOrder } from "@/lib/api/orders"
 
 interface AddToCartButtonProps {
   product: {
@@ -18,7 +19,7 @@ interface AddToCartButtonProps {
 export function AddToCartButton({ product, quantity = 1, className }: AddToCartButtonProps) {
   const { dispatch } = useCart()
 
-  const addToCart = () => {
+  const addToCart = async () => {
     for (let i = 0; i < quantity; i++) {
       dispatch({
         type: "ADD_ITEM",
@@ -29,6 +30,11 @@ export function AddToCartButton({ product, quantity = 1, className }: AddToCartB
           image: product.image,
         },
       })
+      try {
+        await createDraftOrder({ productId: product.id, quantity: 1, price: product.price })
+      } catch (e) {
+        // ignore draft failures for UX; checkout will create a full order anyway
+      }
     }
   }
 

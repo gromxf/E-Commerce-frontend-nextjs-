@@ -29,29 +29,28 @@ export default function OrdersPage() {
                                     <th className="text-left p-4 font-medium">User</th>
                                     <th className="text-left p-4 font-medium">Items</th>
                                     <th className="text-left p-4 font-medium">Total</th>
-                                    <th className="text-left p-4 font-medium">Status</th>
+
+                                    <th className="text-left p-4 font-medium">Payment</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {orders.map((order, index) => (
                                     <tr key={order.id} className={`border-b hover:bg-muted/20 transition-colors ${index % 2 === 0 ? "bg-muted/5" : ""}`}>
                                         <td className="p-4 font-medium">{order.id}</td>
-                                        <td className="p-4 font-medium">{order.user.email}</td>
+                                        <td className="p-4 font-medium">{order.paymentStatus === 'PAID' ? order.user.email : 'Added'}</td>
                                         <td className="p-4 font-medium">{order.items.map((item) => item.product.name).join(", ") || "Deleted item"}</td>
                                         <td className="p-4 font-medium">${order.total}</td>
                                         <td className="p-4">
                                             <Badge
                                                 variant={
-                                                    order.status === "Delivered"
-                                                        ? "default"
-                                                        : order.status === "Shipped"
-                                                            ? "secondary"
-                                                            : order.status === "Cancelled"
-                                                                ? "destructive"
-                                                                : "outline"
+                                                    order.paymentStatus === 'PAID'
+                                                        ? 'default'
+                                                        : order.paymentStatus === 'REFUNDED'
+                                                            ? 'secondary'
+                                                            : 'destructive'
                                                 }
                                             >
-                                                {order.status}
+                                                {order.paymentStatus}
                                             </Badge>
                                         </td>
                                     </tr>
