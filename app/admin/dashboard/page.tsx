@@ -66,7 +66,7 @@ export default function DashboardPage() {
                         <div className="flex items-center justify-between">
                             <div>
                                 <p className="text-sm font-medium text-orange-100">Orders</p>
-                                <p className="text-3xl font-bold text-white">{orders.length}</p>
+                                <p className="text-3xl font-bold text-white">{orders.filter((o) => o.paymentStatus === 'PAID').length}</p>
                             </div>
                             <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                                 <ShoppingCart className="w-6 h-6 text-white" />
@@ -146,30 +146,22 @@ export default function DashboardPage() {
                         </CardHeader>
                         <CardContent className="p-4">
                             <div className="space-y-3">
-                                {orders.slice(0, 4).map((order) => (
-                                    <div key={order.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gradient-to-r hover:from-cyan-50 hover:to-orange-50 dark:hover:from-cyan-950/20 dark:hover:to-orange-950/20 transition-all duration-200 cursor-pointer">
-                                        <div>
-                                            <p className="font-medium text-sm">{order.id}</p>
+                                {orders
+                                    .filter((order) => order.paymentStatus === 'PAID')
+                                    .slice(0, 4)
+                                    .map((order) => (
+                                        <div key={order.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-gradient-to-r hover:from-cyan-50 hover:to-orange-50 dark:hover:from-cyan-950/20 dark:hover:to-orange-950/20 transition-all duration-200 cursor-pointer">
+                                            <div>
+                                                <p className="font-medium text-sm">{order.id}</p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-semibold text-sm">${order.total}</p>
+                                                <Badge variant="secondary" className="text-xs">
+                                                    Pending
+                                                </Badge>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="font-semibold text-sm">${order.total}</p>
-                                            <Badge
-                                                variant={
-                                                    order.status === "Delivered"
-                                                        ? "default"
-                                                        : order.status === "Shipped"
-                                                            ? "secondary"
-                                                            : order.status === "Cancelled"
-                                                                ? "destructive"
-                                                                : "outline"
-                                                }
-                                                className="text-xs"
-                                            >
-                                                {order.status}
-                                            </Badge>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         </CardContent>
                     </Card>
