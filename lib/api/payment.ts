@@ -27,7 +27,7 @@ export interface PaymentResponse {
     timestamp: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export async function processPaymentInfo(paymentInfo: PaymentInfo): Promise<PaymentResponse> {
     const res = await fetch(`${API_BASE_URL}/orders/payment-info`, {

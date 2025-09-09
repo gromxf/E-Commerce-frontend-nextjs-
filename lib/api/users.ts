@@ -43,7 +43,7 @@ export interface CreateUserInput {
     }[]
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export async function fetchAllUsers(): Promise<BackendUser[]> {
     const res = await fetch(`${API_BASE_URL}/users`, {

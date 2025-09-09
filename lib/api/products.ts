@@ -23,7 +23,7 @@ export interface CreateProductInput {
   categoryId: number
 }
 
-// Backend types
+// backend types
 export interface BackendProduct {
   id: number
   name: string
@@ -35,7 +35,7 @@ export interface BackendProduct {
   images: { id: number; url: string }[]
 }
 
-// Transformă backend product în frontend product
+// transforma backend product in frontend product
 function mapBackendToFrontendProduct(p: BackendProduct): Product {
   const imageUrls = p.images?.map(img => img.url) || []
   return {
@@ -52,11 +52,10 @@ function mapBackendToFrontendProduct(p: BackendProduct): Product {
   }
 }
 
-// API calls
 export async function fetchAllProducts(categoryIds?: number[]): Promise<Product[]> {
   let url = `${API_BASE_URL}/products`
 
-  // Add category filter if provided
+  // add category
   if (categoryIds && categoryIds.length > 0) {
     const categoryParams = categoryIds.map(id => `categoryId=${id}`).join('&')
     url += `?${categoryParams}`
@@ -126,7 +125,7 @@ export async function fetchSimilarProducts(categoryId: number, excludeProductId:
   const data: BackendProduct[] = await res.json()
   const allProducts = data.map(mapBackendToFrontendProduct)
 
-  // Filter out the current product and limit results
+  // filter 
   return allProducts
     .filter(product => product.id !== excludeProductId)
     .slice(0, limit)

@@ -15,7 +15,7 @@ export interface UpdateCategoryInput {
     slug?: string
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 export async function fetchAllCategories(): Promise<BackendCategory[]> {
     const res = await fetch(`${API_BASE_URL}/categories`, { credentials: 'include' })

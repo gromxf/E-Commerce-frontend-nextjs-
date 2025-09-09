@@ -46,6 +46,6 @@ export async function fetchWithAuth(input: RequestInfo | URL, init: RequestInit 
 }
 
 export function getApiUrl() {
-    return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
+    return process.env.NEXT_PUBLIC_API_URL
 }
 
